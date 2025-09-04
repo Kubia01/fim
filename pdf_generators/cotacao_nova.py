@@ -412,6 +412,7 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         
         # Texto de apresentação
         pdf.set_font("Arial", size=11)
+        texto_apresentacao = None
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
             # Imprimir com parte em negrito: "LOCACAO DE COMPRESSOR DE AR"
             inicio_texto = (
@@ -448,7 +449,8 @@ Com profissionais altamente qualificados e atendimento especializado, colocamo-n
 
 Atenciosamente,
             """)
-        pdf.multi_cell(0, 5, texto_apresentacao)
+        if texto_apresentacao:
+            pdf.multi_cell(0, 5, texto_apresentacao)
         
         # Assinatura na parte inferior da página 2
         pdf.set_y(240)  # Posiciona mais baixo para garantir que fique na página 2
