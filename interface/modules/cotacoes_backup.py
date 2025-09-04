@@ -1468,7 +1468,7 @@ class CotacoesModule(BaseModule):
 									  valor_total, status, data_validade, tipo_frete, condicao_pagamento,
 									  prazo_entrega, filial_id, esboco_servico, relacao_pecas_substituir,
 									  tipo_cotacao, locacao_nome_equipamento)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 				""", (numero, cliente_id, self.user_id, datetime.now().strftime('%Y-%m-%d'),
 					 modelo_valor, serie_valor, self.observacoes_text.get("1.0", tk.END).strip(), valor_total,
 					 status_valor, data_validade_valor, self.tipo_frete_var.get(), condicao_pagamento_valor, prazo_entrega_valor,
