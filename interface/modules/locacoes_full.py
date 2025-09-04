@@ -136,6 +136,20 @@ class LocacoesModule(BaseModule):
 		tk.Label(dados, text="Filial *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
 		filial_combo = ttk.Combobox(dados, textvariable=self.filial_var, values=["1 - WORLD COMP COMPRESSORES LTDA", "2 - WORLD COMP DO BRASIL COMPRESSORES LTDA"], width=45, state="readonly")
 		filial_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
+		# Mostrar/ocultar ICMS conforme filial
+		def on_filial_changed(_e=None):
+			try:
+				filial_str = self.filial_var.get()
+				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
+				if filial_id == 2:
+					self.icms_label.grid(row=7, column=0, padx=5, sticky="w")
+					self.icms_entry.grid(row=7, column=1, padx=5, sticky="w")
+				else:
+					self.icms_label.grid_remove()
+					self.icms_entry.grid_remove()
+			except Exception:
+				pass
+		filial_combo.bind('<<ComboboxSelected>>', on_filial_changed)
 		row += 1
 
 		tk.Label(dados, text="Cliente *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
@@ -199,6 +213,7 @@ class LocacoesModule(BaseModule):
 		self.item_inicio_var = tk.StringVar()
 		self.item_fim_var = tk.StringVar()
 		self.item_imagem_var = tk.StringVar()
+		self.item_icms_var = tk.StringVar(value="0.00")
 
 		row = 0
 		tk.Label(add_frame, text="Nome do Equipamento:", font=("Arial", 10, "bold"), background="white").grid(row=row, column=0, padx=5, sticky="w")
@@ -232,6 +247,12 @@ class LocacoesModule(BaseModule):
 		self.create_button(img_item_frame, "Selecionar...", lambda: self._pick_image_into(self.item_imagem_var), bg='#10b981').pack(side="right", padx=(5, 0))
 		row += 1
 
+		# ICMS (apenas quando filial = 2)
+		self.icms_label = tk.Label(add_frame, text="ICMS:", font=("Arial", 10, "bold"), background="white")
+		self.icms_entry = tk.Entry(add_frame, textvariable=self.item_icms_var, width=15)
+		# A visibilidade será controlada por on_filial_changed
+		row += 1
+
 		# Ações de imagem do item selecionado
 		actions_frame = tk.Frame(parent, bg='white')
 		actions_frame.pack(fill="x", pady=(0, 8))
@@ -244,7 +265,7 @@ class LocacoesModule(BaseModule):
 		# Tree
 		list_container = tk.Frame(parent, bg='white')
 		list_container.pack(fill="both", expand=True)
-		columns = ("nome", "qtd", "valor_unit", "meses", "inicio", "fim", "valor_total", "descricao", "imagem")
+		columns = ("nome", "qtd", "valor_unit", "meses", "inicio", "fim", "valor_total", "descricao", "imagem", "icms")
 		self.itens_tree = ttk.Treeview(list_container, columns=columns, show="headings", height=8)
 		for col, text, width in [
 			("nome", "Nome/Equipamento", 250),
@@ -255,7 +276,8 @@ class LocacoesModule(BaseModule):
 			("fim", "Fim", 90),
 			("valor_total", "Total", 100),
 			("descricao", "Descrição", 200),
-			("imagem", "Imagem", 200)
+			("imagem", "Imagem", 200),
+			("icms", "ICMS", 80)
 		]:
 			self.itens_tree.heading(col, text=text)
 			self.itens_tree.column(col, width=width, minwidth=width)
@@ -318,6 +340,7 @@ class LocacoesModule(BaseModule):
 		qtd = self.item_qtd_var.get().strip() or "1"
 		valor = self.item_valor_var.get().strip() or "0.00"
 		desc = self.item_desc_var.get().strip()
+		icms = self.item_icms_var.get().strip() or "0.00"
 		inicio_iso = self._parse_date(self.item_inicio_var.get())
 		fim_iso = self._parse_date(self.item_fim_var.get())
 		if not nome:
@@ -334,6 +357,16 @@ class LocacoesModule(BaseModule):
 			return
 		meses = self._calculate_months_between(inicio_iso, fim_iso)
 		total = (valor_unit or 0) * (meses or 0) * quantidade
+		# Obter ICMS baseado na filial
+		icms_val = 0
+		try:
+			filial_str = self.filial_var.get()
+			filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
+			if filial_id == 2:
+				icms_val = clean_number(icms)
+		except Exception:
+			icms_val = 0
+			
 		self.itens_tree.insert("", "end", values=(
 			nome,
 			f"{quantidade:.2f}",
@@ -343,7 +376,8 @@ class LocacoesModule(BaseModule):
 			format_date(fim_iso),
 			format_currency(total),
 			desc,
-			self.item_imagem_var.get().strip()
+			self.item_imagem_var.get().strip(),
+			format_currency(icms_val)
 		))
 		self._update_total()
 		# clear item inputs
@@ -354,6 +388,7 @@ class LocacoesModule(BaseModule):
 		self.item_inicio_var.set("")
 		self.item_fim_var.set("")
 		self.item_imagem_var.set("")
+		self.item_icms_var.set("0.00")
 
 	def _remover_item(self):
 		sel = self.itens_tree.selection()
@@ -523,10 +558,12 @@ class LocacoesModule(BaseModule):
 
 			# Inserir itens com imagem por item
 			for iid in self.itens_tree.get_children():
-				(nome, qtd, valor_unit_fmt, meses, inicio_fmt, fim_fmt, total_fmt, desc, imagem) = self.itens_tree.item(iid)['values']
+				values = self.itens_tree.item(iid)['values']
+				(nome, qtd, valor_unit_fmt, meses, inicio_fmt, fim_fmt, total_fmt, desc, imagem, icms_fmt) = values
 				quantidade = float(qtd)
 				valor_unit = clean_number(valor_unit_fmt)
 				valor_total_item = clean_number(total_fmt)
+				icms_val = clean_number(icms_fmt) if filial_id == 2 else 0
 				inicio_iso = self._parse_date(inicio_fmt)
 				fim_iso = self._parse_date(fim_fmt)
 				meses_int = int(meses) if str(meses).isdigit() else None
@@ -540,7 +577,7 @@ class LocacoesModule(BaseModule):
 					""",
 					(
 						cotacao_id, "Produto", nome, quantidade, valor_unit, valor_total_item, desc,
-						0, 0, 0, 0, "Locação", inicio_iso, fim_iso, meses_int,
+						0, 0, 0, icms_val, "Locação", inicio_iso, fim_iso, meses_int,
 						imagem,
 					),
 				)
@@ -571,6 +608,7 @@ class LocacoesModule(BaseModule):
 			self.itens_tree.delete(iid)
 		# limpar qualquer imagem temporária
 		self.item_imagem_var.set("")
+		self.item_icms_var.set("0.00")
 		try:
 			self.numero_var.set(self._gerar_numero_sequencial())
 		except Exception:
@@ -805,7 +843,7 @@ class LocacoesModule(BaseModule):
 			c.execute(
 				"""
 				SELECT item_nome, quantidade, valor_unitario, locacao_qtd_meses, locacao_data_inicio,
-				       locacao_data_fim, valor_total_item, descricao, locacao_imagem_path
+				       locacao_data_fim, valor_total_item, descricao, locacao_imagem_path, icms
 				FROM itens_cotacao
 				WHERE cotacao_id = ?
 				ORDER BY id
@@ -813,7 +851,7 @@ class LocacoesModule(BaseModule):
 				(cid,),
 			)
 			first_img = ""
-			for (nome, qtd, valor_unit, meses, inicio, fim, total_item, desc, img) in c.fetchall():
+			for (nome, qtd, valor_unit, meses, inicio, fim, total_item, desc, img, icms) in c.fetchall():
 				self.itens_tree.insert(
 					"", "end",
 					values=(
@@ -826,6 +864,7 @@ class LocacoesModule(BaseModule):
 						format_currency(total_item),
 						desc or "",
 						img or "",
+						format_currency(icms or 0),
 					),
 				)
 				if not first_img and img:
