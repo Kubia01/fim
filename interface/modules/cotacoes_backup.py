@@ -192,6 +192,7 @@ class CotacoesModule(BaseModule):
 		self.data_validade_var = tk.StringVar()
 		self.condicao_pagamento_var = tk.StringVar()
 		self.prazo_entrega_var = tk.StringVar()
+		self.tipo_frete_var = tk.StringVar(value="FOB")
 		self.observacoes_var = tk.StringVar()
 		# Novas variáveis de cotação e locação
 		self.tipo_cotacao_var = tk.StringVar(value="Compra")
@@ -297,6 +298,15 @@ class CotacoesModule(BaseModule):
 		self.condicao_pagamento_entry.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
 		row += 1
 		
+		# Tipo de Frete (oculto para locação)
+		self.tipo_frete_label = tk.Label(fields_frame, text="Tipo de Frete:", 
+				 font=('Arial', 10, 'bold'), bg='white')
+		self.tipo_frete_label.grid(row=row, column=0, sticky="w", pady=5)
+		self.tipo_frete_combo = ttk.Combobox(fields_frame, textvariable=self.tipo_frete_var, 
+				 values=["FOB", "CIF", "A combinar"], width=27, state="readonly")
+		self.tipo_frete_combo.grid(row=row, column=1, sticky="w", padx=(10, 0), pady=5)
+		row += 1
+
 		# Prazo de Entrega (oculto para locação)
 		self.prazo_entrega_label = tk.Label(fields_frame, text="Prazo de Entrega:", 
 				 font=('Arial', 10, 'bold'), bg='white')
@@ -671,6 +681,10 @@ class CotacoesModule(BaseModule):
 				self.condicao_pagamento_label.grid_remove()
 			if hasattr(self, 'condicao_pagamento_entry'):
 				self.condicao_pagamento_entry.grid_remove()
+			if hasattr(self, 'tipo_frete_label'):
+				self.tipo_frete_label.grid_remove()
+			if hasattr(self, 'tipo_frete_combo'):
+				self.tipo_frete_combo.grid_remove()
 			if hasattr(self, 'prazo_entrega_label'):
 				self.prazo_entrega_label.grid_remove()
 			if hasattr(self, 'prazo_entrega_entry'):
@@ -705,6 +719,10 @@ class CotacoesModule(BaseModule):
 				self.condicao_pagamento_label.grid()
 			if hasattr(self, 'condicao_pagamento_entry'):
 				self.condicao_pagamento_entry.grid()
+			if hasattr(self, 'tipo_frete_label'):
+				self.tipo_frete_label.grid()
+			if hasattr(self, 'tipo_frete_combo'):
+				self.tipo_frete_combo.grid()
 			if hasattr(self, 'prazo_entrega_label'):
 				self.prazo_entrega_label.grid()
 			if hasattr(self, 'prazo_entrega_entry'):
@@ -1318,6 +1336,7 @@ class CotacoesModule(BaseModule):
 		self.status_var.set("Em Aberto")
 		self.data_validade_var.set("")
 		self.condicao_pagamento_var.set("")
+		self.tipo_frete_var.set("FOB")
 		self.prazo_entrega_var.set("")
 		self.observacoes_text.delete("1.0", tk.END)
 		self.esboco_servico_text.delete("1.0", tk.END)
@@ -1419,14 +1438,14 @@ class CotacoesModule(BaseModule):
 					UPDATE cotacoes SET
 						numero_proposta = ?, modelo_compressor = ?, numero_serie_compressor = ?,
 						observacoes = ?, valor_total = ?, status = ?, data_validade = ?,
-						condicao_pagamento = ?, prazo_entrega = ?, filial_id = ?,
+						tipo_frete = ?, condicao_pagamento = ?, prazo_entrega = ?, filial_id = ?,
 						esboco_servico = ?, relacao_pecas_substituir = ?,
 						tipo_cotacao = ?, locacao_nome_equipamento = ?
 					WHERE id = ?
 				""", (numero, modelo_valor, serie_valor,
 					 self.observacoes_text.get("1.0", tk.END).strip(), valor_total,
 					 status_valor, data_validade_valor,
-					 condicao_pagamento_valor, prazo_entrega_valor,
+					 self.tipo_frete_var.get(), condicao_pagamento_valor, prazo_entrega_valor,
 					 filial_id,
 					 self.esboco_servico_text.get("1.0", tk.END).strip(),
 					 self.relacao_pecas_text.get("1.0", tk.END).strip(),
@@ -1446,13 +1465,13 @@ class CotacoesModule(BaseModule):
 				c.execute("""
 					INSERT INTO cotacoes (numero_proposta, cliente_id, responsavel_id, data_criacao,
 									  modelo_compressor, numero_serie_compressor, observacoes,
-									  valor_total, status, data_validade, condicao_pagamento,
+									  valor_total, status, data_validade, tipo_frete, condicao_pagamento,
 									  prazo_entrega, filial_id, esboco_servico, relacao_pecas_substituir,
 									  tipo_cotacao, locacao_nome_equipamento)
 					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 				""", (numero, cliente_id, self.user_id, datetime.now().strftime('%Y-%m-%d'),
 					 modelo_valor, serie_valor, self.observacoes_text.get("1.0", tk.END).strip(), valor_total,
-					 status_valor, data_validade_valor, condicao_pagamento_valor, prazo_entrega_valor,
+					 status_valor, data_validade_valor, self.tipo_frete_var.get(), condicao_pagamento_valor, prazo_entrega_valor,
 					 filial_id, self.esboco_servico_text.get("1.0", tk.END).strip(), self.relacao_pecas_text.get("1.0", tk.END).strip(), modo, self.locacao_equipamento_var.get()))
 				cotacao_id = c.lastrowid
 				self.current_cotacao_id = cotacao_id
@@ -1709,6 +1728,7 @@ class CotacoesModule(BaseModule):
 			self.data_validade_var.set(cotacao[5] or "")
 			self.condicao_pagamento_var.set(cotacao[12] or "")
 			self.prazo_entrega_var.set(cotacao[13] or "")
+			self.tipo_frete_var.set(cotacao[11] or "FOB")
 			
 			# Observações
 			self.observacoes_text.delete("1.0", tk.END)
