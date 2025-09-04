@@ -1180,20 +1180,20 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     elif item_tipo == "Serviço":
                         descricao_final = f"{prefixo}Serviço: {item_nome}"
                         if mao_obra or deslocamento or estadia:
-                            # Layout conforme exemplo solicitado
+                            # Layout conforme exemplo solicitado - CONCATENAR em vez de sobrescrever
                             if estadia:
-                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
                         try:
                             # Buscar ICMS do item
                             c2 = conn.cursor()
                             c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
                             icms_row = c2.fetchone()
                             if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
                         except Exception:
                             pass
                     
@@ -1201,17 +1201,17 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                         descricao_final = f"{prefixo}Serviços: {item_nome}"
                         if mao_obra or deslocamento or estadia:
                             if estadia:
-                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
                         try:
                             c2 = conn.cursor()
                             c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
                             icms_row = c2.fetchone()
                             if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
                         except Exception:
                             pass
                     
@@ -1220,17 +1220,17 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                         descricao_final = f"{prefixo}Serviços: {item_nome}"
                         if mao_obra or deslocamento or estadia:
                             if estadia:
-                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
                         try:
                             c2 = conn.cursor()
                             c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
                             icms_row = c2.fetchone()
                             if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
                         except Exception:
                             pass
                     

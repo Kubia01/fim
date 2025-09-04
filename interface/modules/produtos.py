@@ -381,21 +381,21 @@ class ProdutosModule(BaseModule):
 
     def on_tipo_changed(self, event):
         """Controla visibilidade do campo NCM e seção de kit baseado no tipo"""
+        # Evitar interferência durante carregamento
+        if hasattr(self, '_carregando') and self._carregando:
+            return
+            
         current_tipo = self.tipo_var.get()
-        print(f"DEBUG: Tipo alterado para: {current_tipo}")  # Debug
         
         # Controlar campo NCM
         if True:
             self.ncm_entry.config(state='normal')
-            print("DEBUG: Campo NCM habilitado")  # Debug
         
         # Controlar campo Esboço do Serviço
         if current_tipo == "Serviços":
             self.esboco_servico_text.config(state='normal')
-            print("DEBUG: Campo Esboço do Serviço habilitado")  # Debug
         else:
             self.esboco_servico_text.config(state='disabled')
-            print("DEBUG: Campo Esboço do Serviço desabilitado")  # Debug
 
         # Se o usuário mudar o tipo para um diferente do carregado e houver um registro em edição,
         # evitar converter o registro original (ex.: Produto -> Kit). Criar um novo registro.
@@ -405,7 +405,6 @@ class ProdutosModule(BaseModule):
                 return "Kit" if t == "Serviços" else t
             if self.current_produto_id and self.loaded_tipo_atual and _normalize_tipo(current_tipo) != self.loaded_tipo_atual:
                 # Resetar ID para forçar INSERT em vez de UPDATE
-                print(f"DEBUG: Alteração de tipo {self.loaded_tipo_atual} -> {current_tipo}; resetando ID para novo cadastro")
                 self.current_produto_id = None
                 # Para segurança, quando destino for Kit, iniciar composição vazia
                 if current_tipo == "Serviços":
@@ -426,7 +425,6 @@ class ProdutosModule(BaseModule):
         if hasattr(self, 'kit_section_frame'):
             if current_tipo == "Serviços":
                 self.kit_section_frame.pack(fill="both", expand=True, pady=(15, 0))
-                print("DEBUG: Seção de kit EXIBIDA")  # Debug
                 # Se estamos iniciando um novo cadastro (sem ID), garantir que a composição do kit comece vazia
                 if not self.current_produto_id:
                     self.kit_items = []
@@ -434,18 +432,19 @@ class ProdutosModule(BaseModule):
                         self.atualizar_kit_tree()
             else:
                 self.kit_section_frame.pack_forget()
-                print("DEBUG: Seção de kit OCULTADA")  # Debug
-        else:
-            print("DEBUG: ERRO - kit_section_frame não encontrado em on_tipo_changed")  # Debug
             
     def format_valor(self, event):
         """Formatar valor monetário"""
         valor_str = self.valor_var.get()
         try:
             valor_float = clean_number(valor_str)
-            self.valor_var.set(f"{valor_float:.2f}")
+            # Só formatar se o valor for diferente de 0 ou se não estiver vazio
+            if valor_float != 0 or valor_str.strip():
+                self.valor_var.set(f"{valor_float:.2f}")
         except ValueError:
-            self.valor_var.set("0.00")
+            # Só definir como 0.00 se o usuário realmente digitou algo inválido
+            if valor_str.strip() and valor_str.strip() != "0.00":
+                self.valor_var.set("0.00")
     
     def carregar_produtos_para_kit(self):
         """Carregar produtos e serviços disponíveis para o kit"""
@@ -839,9 +838,10 @@ class ProdutosModule(BaseModule):
                 return
                 
             self.current_produto_id = produto_id
+            # Flag para evitar interferência do on_tipo_changed durante carregamento
+            self._carregando = True
             
             if produto[2] == "Kit":
-                print(f"DEBUG: Carregando Kit ID {produto_id}")  # Debug
                 # Carregar kit - usar as variáveis padrão
                 self.nome_var.set(produto[1] or "")  # nome
                 self.tipo_var.set("Serviços")
@@ -870,7 +870,6 @@ class ProdutosModule(BaseModule):
                 """, (produto_id,))
                 
                 kit_items_data = c.fetchall()
-                print(f"DEBUG: Encontrados {len(kit_items_data)} itens para o kit")  # Debug
                 
                 for item_row in kit_items_data:
                     item_id, nome, tipo, valor_unitario, quantidade = item_row
@@ -880,7 +879,6 @@ class ProdutosModule(BaseModule):
                         'nome': nome,
                         'quantidade': quantidade
                     })
-                    print(f"DEBUG: Item adicionado: {nome} ({tipo}) - Qtd: {quantidade}")  # Debug
                 
                 # Atualizar interface do kit
                 self.atualizar_kit_tree()
@@ -888,20 +886,17 @@ class ProdutosModule(BaseModule):
                 # Garantir que a seção de kit seja exibida
                 if hasattr(self, 'kit_section_frame'):
                     self.kit_section_frame.pack(fill="both", expand=True, pady=(15, 0))
-                    print("DEBUG: Seção de kit exibida")  # Debug
-                else:
-                    print("DEBUG: ERRO - kit_section_frame não encontrado")  # Debug
                     
                 # Recarregar produtos para o combobox
                 self.carregar_produtos_para_kit()
                 
             else:
-                print(f"DEBUG: Carregando {produto[2]} ID {produto_id}")  # Debug
                 # Carregar produto/serviço
                 self.nome_var.set(produto[1] or "")  # nome
                 self.tipo_var.set(("Serviços" if (produto[2] or "") == "Kit" else (produto[2] or "Produto")))  # tipo
                 self.ncm_var.set(produto[3] or "")  # ncm
-                self.valor_var.set(f"{(produto[4] or 0):.2f}")  # valor_unitario
+                valor_unitario = produto[4] or 0
+                self.valor_var.set(f"{valor_unitario:.2f}")  # valor_unitario
                 self.descricao_var.set(produto[5] or "")  # descricao
                 try:
                     if hasattr(self, 'esboco_servico_text'):
@@ -919,12 +914,13 @@ class ProdutosModule(BaseModule):
                 # Se não for kit, ocultar a seção de kit
                 if hasattr(self, 'kit_section_frame'):
                     self.kit_section_frame.pack_forget()
-                    print("DEBUG: Seção de kit ocultada")  # Debug
                 
         except sqlite3.Error as e:
             self.show_error(f"Erro ao carregar produto: {e}")
         finally:
             conn.close()
+            # Remover flag de carregamento
+            self._carregando = False
             
     def toggle_ativo(self):
         """Ativar/desativar produto selecionado (qualquer aba)."""
