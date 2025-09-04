@@ -163,10 +163,17 @@ def criar_banco():
 		ncm TEXT,
 		valor_unitario REAL DEFAULT 0,
 		descricao TEXT,
+		esboco_servico TEXT,
 		ativo BOOLEAN DEFAULT 1,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)''')
+
+	# Migração: Adicionar coluna esboco_servico em produtos
+	try:
+		c.execute("ALTER TABLE produtos ADD COLUMN esboco_servico TEXT")
+	except sqlite3.OperationalError:
+		pass
 
 	# Tabela Itens do Kit - RENOMEADA
 	c.execute('''CREATE TABLE IF NOT EXISTS kit_items (

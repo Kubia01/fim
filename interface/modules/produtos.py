@@ -88,6 +88,13 @@ class ProdutosModule(BaseModule):
         tk.Label(fields_frame, text="Descrição:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
         tk.Entry(fields_frame, textvariable=self.descricao_var, font=('Arial', 10), width=40).grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         row += 1
+
+        # Esboço do Serviço (somente para Serviços)
+        esboco_label = tk.Label(fields_frame, text="Esboço do Serviço:", font=('Arial', 10, 'bold'), bg='white')
+        esboco_label.grid(row=row, column=0, sticky="nw", pady=5)
+        self.esboco_servico_text = tk.Text(fields_frame, height=4, width=40)
+        self.esboco_servico_text.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
+        row += 1
         
         # Ativo
         tk.Label(fields_frame, text="Ativo:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
@@ -382,6 +389,14 @@ class ProdutosModule(BaseModule):
             self.ncm_entry.config(state='normal')
             print("DEBUG: Campo NCM habilitado")  # Debug
         
+        # Controlar campo Esboço do Serviço
+        if current_tipo == "Serviços":
+            self.esboco_servico_text.config(state='normal')
+            print("DEBUG: Campo Esboço do Serviço habilitado")  # Debug
+        else:
+            self.esboco_servico_text.config(state='disabled')
+            print("DEBUG: Campo Esboço do Serviço desabilitado")  # Debug
+
         # Se o usuário mudar o tipo para um diferente do carregado e houver um registro em edição,
         # evitar converter o registro original (ex.: Produto -> Kit). Criar um novo registro.
         try:
@@ -589,6 +604,14 @@ class ProdutosModule(BaseModule):
             self.show_warning("Valor inválido.")
             return
 
+        # Ler esboço do serviço (apenas se Serviços)
+        esboco_texto = None
+        try:
+            if hasattr(self, 'esboco_servico_text') and self.tipo_var.get() == 'Serviços':
+                esboco_texto = self.esboco_servico_text.get("1.0", tk.END).strip()
+        except Exception:
+            esboco_texto = None
+
         # Prevenir que um produto vire kit sem intenção: caso um registro existente de Produto/Serviço
         # esteja com tipo alterado para "Kit", forçar novo cadastro (não UPDATE)
         try:
@@ -605,6 +628,7 @@ class ProdutosModule(BaseModule):
             dados = (
                 nome, tipo_db, self.ncm_var.get().strip(),
                 valor, self.descricao_var.get().strip(),
+                esboco_texto,
                 1 if self.ativo_var.get() else 0
             )
             
@@ -612,7 +636,7 @@ class ProdutosModule(BaseModule):
                 # Atualizar produto
                 c.execute("""
                     UPDATE produtos SET nome = ?, tipo = ?, ncm = ?, valor_unitario = ?,
-                                      descricao = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP
+                                      descricao = ?, esboco_servico = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 """, dados + (self.current_produto_id,))
                 
@@ -622,8 +646,8 @@ class ProdutosModule(BaseModule):
             else:
                 # Inserir novo produto
                 c.execute("""
-                    INSERT INTO produtos (nome, tipo, ncm, valor_unitario, descricao, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO produtos (nome, tipo, ncm, valor_unitario, descricao, esboco_servico, ativo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, dados)
                 self.current_produto_id = c.lastrowid
             
@@ -810,8 +834,15 @@ class ProdutosModule(BaseModule):
                 print(f"DEBUG: Carregando Kit ID {produto_id}")  # Debug
                 # Carregar kit - usar as variáveis padrão
                 self.nome_var.set(produto[1] or "")  # nome
-                self.tipo_var.set("Kit")
+                self.tipo_var.set("Serviços")
                 self.descricao_var.set(produto[5] or "")  # descricao
+                try:
+                    if hasattr(self, 'esboco_servico_text'):
+                        self.esboco_servico_text.delete("1.0", tk.END)
+                        if len(produto) > 7 and produto[7]:
+                            self.esboco_servico_text.insert("1.0", produto[7])
+                except Exception:
+                    pass
                 self.ativo_var.set(bool(produto[6]))  # ativo
                 self.loaded_tipo_atual = "Kit"
                 
@@ -858,10 +889,17 @@ class ProdutosModule(BaseModule):
                 print(f"DEBUG: Carregando {produto[2]} ID {produto_id}")  # Debug
                 # Carregar produto/serviço
                 self.nome_var.set(produto[1] or "")  # nome
-                self.tipo_var.set(produto[2] or "Produto")  # tipo
+                self.tipo_var.set(("Serviços" if (produto[2] or "") == "Kit" else (produto[2] or "Produto")))  # tipo
                 self.ncm_var.set(produto[3] or "")  # ncm
                 self.valor_var.set(f"{produto[4]:.2f}" if produto[4] else "0.00")  # valor_unitario
                 self.descricao_var.set(produto[5] or "")  # descricao
+                try:
+                    if hasattr(self, 'esboco_servico_text'):
+                        self.esboco_servico_text.delete("1.0", tk.END)
+                        if len(produto) > 7 and produto[7]:
+                            self.esboco_servico_text.insert("1.0", produto[7])
+                except Exception:
+                    pass
                 self.ativo_var.set(bool(produto[6]))  # ativo
                 self.loaded_tipo_atual = (produto[2] or "Produto")
                 
