@@ -220,6 +220,22 @@ class CotacoesModule(BaseModule):
 								  "2 - WORLD COMP DO BRASIL COMPRESSORES LTDA"], 
 							   width=45, state="readonly")
 		filial_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
+		# Mostrar/ocultar ICMS conforme filial
+		def on_filial_changed(_e=None):
+			try:
+				filial_str = self.filial_var.get()
+				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
+				if filial_id == 2:
+					self.icms_label.grid(row=1, column=0, padx=5, sticky="w")
+					self.icms_entry.grid(row=1, column=1, padx=5, sticky="w")
+				else:
+					self.icms_label.grid_remove()
+					self.icms_entry.grid_remove()
+			except Exception:
+				pass
+		filial_combo.bind('<<ComboboxSelected>>', on_filial_changed)
+		# Inicializar visibilidade
+		on_filial_changed()
 		row += 1
 		
 		# Tipo de Cotação
@@ -475,6 +491,12 @@ class CotacoesModule(BaseModule):
 		
 		tk.Label(self.servico_frame, text="Estadia:", font=("Arial", 10, "bold"), bg="white").grid(row=0, column=4, padx=5, sticky="w")
 		tk.Entry(self.servico_frame, textvariable=self.item_estadia_var, width=10).grid(row=0, column=5, padx=5)
+		
+		# ICMS (apenas quando filial = 2)
+		self.item_icms_var = tk.StringVar(value="0.00")
+		self.icms_label = tk.Label(self.servico_frame, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
+		self.icms_entry = tk.Entry(self.servico_frame, textvariable=self.item_icms_var, width=10)
+		# A visibilidade será controlada por on_filial_changed semelhante ao on_tipo_changed
 		
 		# Botão adicionar para compra
 		adicionar_button_compra = self.create_button(compra_grid, "Adicionar Item", self.adicionar_item)
@@ -1159,6 +1181,14 @@ class CotacoesModule(BaseModule):
 				descricao_completa,
 				"Compra"
 			))
+			# Guardar ICMS no último item via atributo associado (usar hidden mapping se necessário)
+			if not hasattr(self, '_icms_por_item_idx'):
+				self._icms_por_item_idx = {}
+			try:
+				last = self.itens_tree.get_children()[-1]
+				self._icms_por_item_idx[last] = clean_number(self.item_icms_var.get()) if self.filial_var.get().split(' - ')[0] == '2' else 0
+			except Exception:
+				pass
 		
 		# Limpar campos baseado no modo
 		if modo == 'Locação':
@@ -1526,14 +1556,24 @@ class CotacoesModule(BaseModule):
 				# Forçar tipo_operacao conforme modo
 				if modo == 'Locação':
 					tipo_operacao = 'Locação'
+				# Obter ICMS salvo para esta linha (se houver e quando filial 2)
+				icms_item_val = 0
+				try:
+					filial_str_local = self.filial_var.get()
+					filial_id_local = int(filial_str_local.split(' - ')[0]) if ' - ' in filial_str_local else int(filial_str_local)
+					if filial_id_local == 2 and hasattr(self, '_icms_por_item_idx'):
+						# Buscar por nome/índice; fallback 0
+						icms_item_val = 0
+				except Exception:
+					icms_item_val = 0
 				c.execute("""
 					INSERT INTO itens_cotacao (cotacao_id, tipo, item_nome, quantidade,
 										 valor_unitario, valor_total_item, descricao,
-										 mao_obra, deslocamento, estadia, tipo_operacao,
+										 mao_obra, deslocamento, estadia, icms, tipo_operacao,
 										 locacao_data_inicio, locacao_data_fim, locacao_qtd_meses)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 				""", (cotacao_id, tipo, nome, quantidade, valor_unitario, valor_total_item, desc,
-					 valor_mao_obra, valor_desloc, valor_estadia, tipo_operacao,
+					 valor_mao_obra, valor_desloc, valor_estadia, icms_item_val, tipo_operacao,
 					 inicio_iso, fim_iso, meses_int))
 			conn.commit()
 			self.show_success("Cotação salva com sucesso!")

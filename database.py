@@ -237,6 +237,7 @@ def criar_banco():
 		mao_obra REAL DEFAULT 0,
 		deslocamento REAL DEFAULT 0,
 		estadia REAL DEFAULT 0,
+		icms REAL DEFAULT 0,
 		tipo_operacao TEXT DEFAULT 'Compra',
 		locacao_data_inicio DATE,
 		locacao_data_fim DATE,
@@ -246,6 +247,12 @@ def criar_banco():
 		FOREIGN KEY (produto_id) REFERENCES produtos(id),
 		FOREIGN KEY (kit_id) REFERENCES itens_cotacao(id)
 	)''')
+
+	# Migração: Adicionar coluna ICMS em itens_cotacao
+	try:
+		c.execute("ALTER TABLE itens_cotacao ADD COLUMN icms REAL DEFAULT 0")
+	except sqlite3.OperationalError:
+		pass
 
 	# Tabela Relatórios Técnicos - ATUALIZADA com campos das abas 2 e 3
 	c.execute('''CREATE TABLE IF NOT EXISTS relatorios_tecnicos (

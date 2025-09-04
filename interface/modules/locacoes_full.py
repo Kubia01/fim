@@ -534,13 +534,13 @@ class LocacoesModule(BaseModule):
 					"""
 					INSERT INTO itens_cotacao (
 						cotacao_id, tipo, item_nome, quantidade, valor_unitario, valor_total_item, descricao,
-						mao_obra, deslocamento, estadia, tipo_operacao, locacao_data_inicio, locacao_data_fim, locacao_qtd_meses,
+						mao_obra, deslocamento, estadia, icms, tipo_operacao, locacao_data_inicio, locacao_data_fim, locacao_qtd_meses,
 						locacao_imagem_path
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					""",
 					(
 						cotacao_id, "Produto", nome, quantidade, valor_unit, valor_total_item, desc,
-						0, 0, 0, "Locação", inicio_iso, fim_iso, meses_int,
+						0, 0, 0, 0, "Locação", inicio_iso, fim_iso, meses_int,
 						imagem,
 					),
 				)
