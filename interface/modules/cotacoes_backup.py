@@ -779,6 +779,7 @@ class CotacoesModule(BaseModule):
 		
 		# Para compra, atualizar combo de produtos
 		tipo = self.item_tipo_var.get()
+		tipo_db = 'Kit' if tipo == 'Serviços' else tipo
 		if not tipo:
 			if hasattr(self, 'item_nome_combo_compra'):
 				self.item_nome_combo_compra['values'] = []
@@ -787,7 +788,7 @@ class CotacoesModule(BaseModule):
 		conn = sqlite3.connect(DB_NAME)
 		c = conn.cursor()
 		try:
-			c.execute("SELECT nome FROM produtos WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo,))
+			c.execute("SELECT nome FROM produtos WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo_db,))
 			produtos = [row[0] for row in c.fetchall()]
 			
 			# Atualizar combo de compra
@@ -810,6 +811,7 @@ class CotacoesModule(BaseModule):
 		
 		# Para compra, buscar dados do produto
 		tipo = self.item_tipo_var.get()
+		tipo_db = 'Kit' if tipo == 'Serviços' else tipo
 		if not nome or not tipo:
 			return
 			
@@ -817,7 +819,7 @@ class CotacoesModule(BaseModule):
 		c = conn.cursor()
 		
 		try:
-			c.execute("SELECT id, valor_unitario, descricao FROM produtos WHERE nome = ? AND tipo = ?", (nome, tipo))
+			c.execute("SELECT id, valor_unitario, descricao FROM produtos WHERE nome = ? AND tipo = ?", (nome, tipo_db))
 			result = c.fetchone()
 			if result:
 				produto_id, valor, descricao = result
@@ -825,8 +827,8 @@ class CotacoesModule(BaseModule):
 				if descricao:
 					self.item_desc_var.set(descricao)
 				
-				# Se for um Kit, preencher automaticamente a relação de peças
-				if tipo == "Kit":
+				# Se for Serviços (Kit), preencher automaticamente a relação de peças
+				if tipo in ("Kit", "Serviços"):
 					self.preencher_relacao_pecas_kit(produto_id)
 				else:
 					# Se não for Kit, limpar o campo de relação de peças
