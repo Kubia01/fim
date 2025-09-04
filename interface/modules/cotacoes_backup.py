@@ -819,7 +819,36 @@ class CotacoesModule(BaseModule):
 		c = conn.cursor()
 		
 		try:
-			c.execute("SELECT id, valor_unitario, descricao FROM produtos WHERE nome = ? AND tipo = ?", (nome, tipo_db))
+			# Para Serviços (Kit), buscar também o esboço e somar valor total dos componentes
+			if tipo_db == 'Kit':
+				# valor_unitario do registro Kit pode ser tratado como 0; total vem dos itens
+				c.execute("SELECT id, COALESCE(valor_unitario,0), descricao, esboco_servico FROM produtos WHERE nome = ? AND tipo = 'Kit'", (nome,))
+				result = c.fetchone()
+				if result:
+					produto_id, valor, descricao, esboco = result
+					# Somar itens do kit para valor total sugerido
+					c.execute("""
+						SELECT SUM(p.valor_unitario * ki.quantidade)
+						FROM kit_items ki
+						JOIN produtos p ON p.id = ki.produto_id
+						WHERE ki.kit_id = ?
+					""", (produto_id,))
+					soma = c.fetchone()[0] or 0
+					self.item_valor_var.set(f"{soma:.2f}")
+					# Preencher esboço do serviço na seção correspondente, se existir
+					try:
+						if hasattr(self, 'esboco_servico_text') and esboco:
+							self.esboco_servico_text.delete("1.0", tk.END)
+							self.esboco_servico_text.insert("1.0", esboco)
+					except Exception:
+						pass
+					if descricao:
+						self.item_desc_var.set(descricao)
+					# Preencher relação de peças automaticamente
+					self.preencher_relacao_pecas_kit(produto_id)
+					return
+			else:
+				c.execute("SELECT id, valor_unitario, descricao FROM produtos WHERE nome = ? AND tipo = ?", (nome, tipo_db))
 			result = c.fetchone()
 			if result:
 				produto_id, valor, descricao = result
