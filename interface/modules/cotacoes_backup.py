@@ -1808,11 +1808,11 @@ class CotacoesModule(BaseModule):
 			
 			# Esboço do serviço e relação de peças
 			self.esboco_servico_text.delete("1.0", tk.END)
-			if cotacao[19]:
-				self.esboco_servico_text.insert("1.0", cotacao[19])
+			if cotacao[19] and str(cotacao[19]).strip():
+				self.esboco_servico_text.insert("1.0", str(cotacao[19]))
 			self.relacao_pecas_text.delete("1.0", tk.END)
-			if cotacao[20]:
-				self.relacao_pecas_text.insert("1.0", cotacao[20])
+			if cotacao[20] and str(cotacao[20]).strip():
+				self.relacao_pecas_text.insert("1.0", str(cotacao[20]))
 			
 			# Campos de Locação
 			self.tipo_cotacao_var.set(cotacao[21] or "Compra")
