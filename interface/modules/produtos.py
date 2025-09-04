@@ -572,6 +572,8 @@ class ProdutosModule(BaseModule):
         self.ativo_var.set(True)
         self.ncm_entry.config(state='normal') # Habilita o campo NCM para produtos
         try:
+            if hasattr(self, 'esboco_servico_text'):
+                self.esboco_servico_text.delete("1.0", tk.END)
             self.on_tipo_changed(None)
         except Exception:
             pass
@@ -614,10 +616,10 @@ class ProdutosModule(BaseModule):
 
         # Prevenir que um produto vire kit sem intenção: caso um registro existente de Produto/Serviço
         # esteja com tipo alterado para "Kit", forçar novo cadastro (não UPDATE)
+        # Permitir editar normalmente um item Serviços (Kit), sem forçar novo cadastro
         try:
-            if self.current_produto_id and self.loaded_tipo_atual and tipo == "Serviços" and self.loaded_tipo_atual != "Kit":
-                print("DEBUG: Convertendo Produto/Serviço em Kit - criando novo cadastro de Kit")
-                self.current_produto_id = None
+            if self.current_produto_id and self.loaded_tipo_atual and tipo == "Serviços" and self.loaded_tipo_atual == "Kit":
+                pass
         except Exception:
             pass
             
