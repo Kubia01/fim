@@ -413,19 +413,28 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         # Texto de apresentação
         pdf.set_font("Arial", size=11)
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
-            texto_apresentacao = clean_text(
-"Prezados Senhores:\n\n"
-"Agradecemos por nos conceder a oportunidade de apresentarmos nossa proposta para\n"
-"fornecimento de LOCACAO DE COMPRESSOR DE AR.\n\n"
-"A World Comp Compressores e especializada em manutencao de compressores de parafuso\n"
-"das principais marcas do mercado, como Atlas Copco, Ingersoll Rand, Chicago. Atuamos tambem com\n"
-"revisao de equipamentos e unidades compressoras, venda de pecas, bem como venda e locacao de\n"
-"compressores de parafuso isentos de oleo e lubrificados.\n\n"
-"Com profissionais altamente qualificados e atendimento especializado, colocamo-nos a\n"
-"disposicao para analisar, corrigir e prestar os devidos esclarecimentos, sempre buscando atender as\n"
-"especificacoes e necessidades dos nossos clientes."
+            # Imprimir com parte em negrito: "LOCACAO DE COMPRESSOR DE AR"
+            inicio_texto = (
+                "Prezados Senhores:\n\n"
+                "Agradecemos por nos conceder a oportunidade de apresentarmos nossa proposta para\n"
+                "fornecimento de "
             )
-            texto_apresentacao = replace_company_names(texto_apresentacao, dados_filial.get('nome'))
+            pdf.multi_cell(0, 5, clean_text(inicio_texto))
+            pdf.set_font("Arial", 'B', 11)
+            pdf.cell(0, 5, clean_text("LOCACAO DE COMPRESSOR DE AR"), 0, 1, 'L')
+            pdf.set_font("Arial", '', 11)
+            restante_texto = (
+                ".\n\n"
+                "A World Comp Compressores e especializada em manutencao de compressores de parafuso\n"
+                "das principais marcas do mercado, como Atlas Copco, Ingersoll Rand, Chicago. Atuamos tambem com\n"
+                "revisao de equipamentos e unidades compressoras, venda de pecas, bem como venda e locacao de\n"
+                "compressores de parafuso isentos de oleo e lubrificados.\n\n"
+                "Com profissionais altamente qualificados e atendimento especializado, colocamo-nos a\n"
+                "disposicao para analisar, corrigir e prestar os devidos esclarecimentos, sempre buscando atender as\n"
+                "especificacoes e necessidades dos nossos clientes."
+            )
+            restante_texto = replace_company_names(clean_text(restante_texto), dados_filial.get('nome'))
+            pdf.multi_cell(0, 5, restante_texto)
         else:
             modelo_text = f" {modelo_compressor}" if modelo_compressor else ""
             texto_apresentacao = clean_text(f"""
@@ -615,17 +624,17 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 imagem_pagina4 = locacao_imagem_path_db
 
             if imagem_pagina4:
-                # Padronizar tamanho como página 7 (~70x24)
+                # Padronizar tamanho como página 7 (~70x24) e aumentar em 30%
                 max_w, max_h = 70, 24
                 try:
                     from PIL import Image
                     img = Image.open(imagem_pagina4)
                     iw, ih = img.size
                     ratio = min(max_w / iw, max_h / ih)
-                    w = iw * ratio
-                    h = ih * ratio
+                    w = iw * ratio * 1.3
+                    h = ih * ratio * 1.3
                 except Exception:
-                    w, h = 70, 24
+                    w, h = 70 * 1.3, 24 * 1.3
                 x = (210 - w) / 2
                 y = pdf.get_y() + 10
                 if y + h > 270:
@@ -799,15 +808,15 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             if imagem_p7:
                 try:
                     from PIL import Image
-                    # Reduzir em ~30% com bounding box menor (70x24)
+                    # Tamanho base (70x24) e aumentar em 30%
                     max_w, max_h = 70, 24
                     img = Image.open(imagem_p7)
                     iw, ih = img.size
                     ratio = min(max_w / iw, max_h / ih)
-                    w = iw * ratio
-                    h = ih * ratio
+                    w = iw * ratio * 1.3
+                    h = ih * ratio * 1.3
                 except Exception:
-                    w, h = 70, 24
+                    w, h = 70 * 1.3, 24 * 1.3
                 x = (210 - w) / 2
                 y = 77
                 pdf.image(imagem_p7, x=x, y=y, w=w, h=h)
@@ -1212,7 +1221,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.cell(col_widths[4], 10, clean_text(f"R$ {valor_total:.2f}"), 1, 1, 'R', 1)
                 pdf.ln(10)
 
-            # Condições comerciais
+            # Condições comerciais (já existia: manter)
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
             pdf.set_font("Arial", '', 11)
