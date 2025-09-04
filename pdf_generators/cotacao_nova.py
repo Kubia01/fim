@@ -1180,13 +1180,34 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     elif item_tipo == "Serviço":
                         descricao_final = f"{prefixo}Serviço: {item_nome}"
                         if mao_obra or deslocamento or estadia:
-                            descricao_final += "\nDetalhes:"
-                            if mao_obra:
-                                descricao_final += f"\n- Mão de obra: R${mao_obra:.2f}"
-                            if deslocamento:
-                                descricao_final += f"\n- Deslocamento: R${deslocamento:.2f}"
+                            # Layout conforme exemplo solicitado
                             if estadia:
-                                descricao_final += f"\n- Estadia: R${estadia:.2f}"
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                            if deslocamento:
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                            if mao_obra:
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
+                    
+                    elif item_tipo == "Serviços":
+                        descricao_final = f"{prefixo}Serviços: {item_nome}"
+                        if mao_obra or deslocamento or estadia:
+                            if estadia:
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                            if deslocamento:
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                            if mao_obra:
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
+                    
+                    elif item_tipo == "Kit" and not produto_id:
+                        # Kits sem produto_id válido: tratar como Serviços
+                        descricao_final = f"{prefixo}Serviços: {item_nome}"
+                        if mao_obra or deslocamento or estadia:
+                            if estadia:
+                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                            if deslocamento:
+                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                            if mao_obra:
+                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
                     
                     else:  # Produto
                         descricao_final = f"{prefixo}{item_nome}"

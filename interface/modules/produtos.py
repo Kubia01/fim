@@ -828,7 +828,10 @@ class ProdutosModule(BaseModule):
         c = conn.cursor()
         
         try:
-            c.execute("SELECT * FROM produtos WHERE id = ?", (produto_id,))
+            c.execute("""
+                SELECT id, nome, tipo, ncm, valor_unitario, descricao, esboco_servico, ativo
+                FROM produtos WHERE id = ?
+            """, (produto_id,))
             produto = c.fetchone()
             
             if not produto:
@@ -846,11 +849,11 @@ class ProdutosModule(BaseModule):
                 try:
                     if hasattr(self, 'esboco_servico_text'):
                         self.esboco_servico_text.delete("1.0", tk.END)
-                        if len(produto) > 7 and produto[7]:
-                            self.esboco_servico_text.insert("1.0", produto[7])
+                        if produto[6]:
+                            self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[6]))  # ativo
+                self.ativo_var.set(bool(produto[7]))  # ativo
                 self.loaded_tipo_atual = "Kit"
                 
                 # Garantir estado da UI
@@ -898,16 +901,16 @@ class ProdutosModule(BaseModule):
                 self.nome_var.set(produto[1] or "")  # nome
                 self.tipo_var.set(("Serviços" if (produto[2] or "") == "Kit" else (produto[2] or "Produto")))  # tipo
                 self.ncm_var.set(produto[3] or "")  # ncm
-                self.valor_var.set(f"{produto[4]:.2f}" if produto[4] else "0.00")  # valor_unitario
+                self.valor_var.set(f"{(produto[4] or 0):.2f}")  # valor_unitario
                 self.descricao_var.set(produto[5] or "")  # descricao
                 try:
                     if hasattr(self, 'esboco_servico_text'):
                         self.esboco_servico_text.delete("1.0", tk.END)
-                        if len(produto) > 7 and produto[7]:
-                            self.esboco_servico_text.insert("1.0", produto[7])
+                        if produto[6]:
+                            self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[6]))  # ativo
+                self.ativo_var.set(bool(produto[7]))  # ativo
                 self.loaded_tipo_atual = (produto[2] or "Produto")
                 
                 # Garantir estado da UI (NCM/Kit)
