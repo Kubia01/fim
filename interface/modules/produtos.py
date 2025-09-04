@@ -400,7 +400,10 @@ class ProdutosModule(BaseModule):
         # Se o usuário mudar o tipo para um diferente do carregado e houver um registro em edição,
         # evitar converter o registro original (ex.: Produto -> Kit). Criar um novo registro.
         try:
-            if self.current_produto_id and self.loaded_tipo_atual and current_tipo != self.loaded_tipo_atual:
+            # Tratar "Serviços" (UI) como equivalente a "Kit" (DB) para comparação
+            def _normalize_tipo(t):
+                return "Kit" if t == "Serviços" else t
+            if self.current_produto_id and self.loaded_tipo_atual and _normalize_tipo(current_tipo) != self.loaded_tipo_atual:
                 # Resetar ID para forçar INSERT em vez de UPDATE
                 print(f"DEBUG: Alteração de tipo {self.loaded_tipo_atual} -> {current_tipo}; resetando ID para novo cadastro")
                 self.current_produto_id = None
@@ -411,7 +414,9 @@ class ProdutosModule(BaseModule):
                         self.atualizar_kit_tree()
                 # Informar usuário (opcional)
                 try:
-                    self.show_info("Novo cadastro", f"Alterar o tipo de {self.loaded_tipo_atual} para {current_tipo} criará um novo cadastro.")
+                    # Não mostrar aviso quando a alteração for apenas nomenclatura (Kit <-> Serviços)
+                    if not (_normalize_tipo(current_tipo) == self.loaded_tipo_atual == "Kit"):
+                        self.show_info("Novo cadastro", f"Alterar o tipo de {self.loaded_tipo_atual} para {current_tipo} criará um novo cadastro.")
                 except Exception:
                     pass
         except Exception:
