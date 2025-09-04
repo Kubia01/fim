@@ -509,7 +509,7 @@ class LocacoesModule(BaseModule):
 						modelo_compressor, observacoes, valor_total, status, tipo_frete, condicao_pagamento, prazo_entrega,
 						filial_id, esboco_servico, relacao_pecas_substituir, tipo_cotacao,
 						contato_nome
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					""",
 					(
 						numero, cliente_id, self.user_id, datetime.now().strftime('%Y-%m-%d'), None,
