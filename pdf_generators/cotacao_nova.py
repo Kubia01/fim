@@ -566,7 +566,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
         
         # =====================================================
         # PÁGINA 4: ESBOÇO DO SERVIÇO A SER EXECUTADO (COMPRA)
-        # OU PÁGINA 4 DE LOCAÇÃO COM TEXTO + IMAGEM
+        # OU PÁGINA 4 DE LOCAÇÃO COM TEXTO  IMAGEM
         # =====================================================
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
             # Página 4 específica de Locação
@@ -580,7 +580,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     desc = it[4] if len(it) > 4 else None
                     tipo_oper = (it[11] if len(it) > 11 else '') or ''
                     if 'loca' in tipo_oper.lower() and desc:
-                        m = re.search(r"(?i)modelo\s*:\s*(.+)$", str(desc))
+                        m = re.search(r"(?i)modelo\s*:\s*(.)$", str(desc))
                         if m:
                             modelo_titulo = m.group(1).strip()
                             break
@@ -697,7 +697,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 qtd_num = float(qtd or 0)
                 vm_num = float(valor_mensal or 0)
                 meses_num = int(meses or 0)
-                total_geral += (vm_num * meses_num * qtd_num)
+                total_geral = (vm_num * meses_num * qtd_num)
 
                 # Nome com quebra automática
                 x0 = pdf.get_x()
@@ -718,7 +718,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             # Formatar em pt-BR: 32.500,00
             def brl(v):
                 try:
-                    return ("R$ " + f"{v:,.2f}").replace(",", "@").replace(".", ",").replace("@", ".")
+                    return ("R$ "  f"{v:,.2f}").replace(",", "@").replace(".", ",").replace("@", ".")
                 except Exception:
                     return f"R$ {v:.2f}"
             pdf.cell(sum(col_w[:-1]), 10, clean_text("TOTAL GERAL:"), 1, 0, 'R', 1)
@@ -750,7 +750,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             # DDL dinâmico a partir de condicao_pagamento
             ddl_valor = None
             try:
-                m = re.search(r"(\d+)\s*DDL", (condicao_pagamento or ''), flags=re.IGNORECASE)
+                m = re.search(r"(\d)\s*DDL", (condicao_pagamento or ''), flags=re.IGNORECASE)
                 if m:
                     ddl_valor = m.group(1)
             except Exception:
@@ -1175,64 +1175,64 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     if item_tipo == "Kit" and produto_id:
                         # Obter composição do kit
                         composicao = PDFCotacao.obter_composicao_kit(produto_id)
-                        descricao_final = f"{prefixo}Kit: {item_nome}\nComposição:\n" + "\n".join(composicao)
+                        descricao_final = f"{prefixo}Kit: {item_nome}\nComposição:\n"  "\n".join(composicao)
                     
                     elif item_tipo == "Serviço":
                         descricao_final = f"{prefixo}Serviço: {item_nome}"
                         if mao_obra or deslocamento or estadia:
                             # Layout conforme exemplo solicitado
                             if estadia:
-                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-+                        try:
-+                            # Buscar ICMS do item
-+                            c2 = conn.cursor()
-+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-+                            icms_row = c2.fetchone()
-+                            if icms_row and (icms_row[0] or 0) > 0:
-+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-+                        except Exception:
-+                            pass
+                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                        try:
+                            # Buscar ICMS do item
+                            c2 = conn.cursor()
+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                            icms_row = c2.fetchone()
+                            if icms_row and (icms_row[0] or 0) > 0:
+                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                        except Exception:
+                            pass
                     
                     elif item_tipo == "Serviços":
                         descricao_final = f"{prefixo}Serviços: {item_nome}"
                         if mao_obra or deslocamento or estadia:
                             if estadia:
-                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-+                        try:
-+                            c2 = conn.cursor()
-+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-+                            icms_row = c2.fetchone()
-+                            if icms_row and (icms_row[0] or 0) > 0:
-+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-+                        except Exception:
-+                            pass
+                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                        try:
+                            c2 = conn.cursor()
+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                            icms_row = c2.fetchone()
+                            if icms_row and (icms_row[0] or 0) > 0:
+                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                        except Exception:
+                            pass
                     
                     elif item_tipo == "Kit" and not produto_id:
                         # Kits sem produto_id válido: tratar como Serviços
                         descricao_final = f"{prefixo}Serviços: {item_nome}"
                         if mao_obra or deslocamento or estadia:
                             if estadia:
-                                descricao_final += f"\nEstadia: R$ {estadia:.2f}"
+                                descricao_final = f"\nEstadia: R$ {estadia:.2f}"
                             if deslocamento:
-                                descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
+                                descricao_final = f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
-                                descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-+                        try:
-+                            c2 = conn.cursor()
-+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-+                            icms_row = c2.fetchone()
-+                            if icms_row and (icms_row[0] or 0) > 0:
-+                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-+                        except Exception:
-+                            pass
+                                descricao_final = f"\nMão de Obra: R$ {mao_obra:.2f}"
+                        try:
+                            c2 = conn.cursor()
+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                            icms_row = c2.fetchone()
+                            if icms_row and (icms_row[0] or 0) > 0:
+                                descricao_final = f"\nICMS: R$ {icms_row[0]:.2f}"
+                        except Exception:
+                            pass
                     
                     else:  # Produto
                         descricao_final = f"{prefixo}{item_nome}"
@@ -1268,7 +1268,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     # Valor Total
                     pdf.cell(col_widths[4], altura_real, clean_text(f"R$ {valor_total_item:.2f}"), 1, 1, 'R')
                     
-                    item_counter += 1
+                    item_counter = 1
 
                 # Linha do valor total - alinhada com a tabela
                 pdf.set_x(10)  # Mesma margem esquerda da tabela
