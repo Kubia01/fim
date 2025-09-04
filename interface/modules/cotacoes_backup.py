@@ -895,8 +895,8 @@ class CotacoesModule(BaseModule):
 		list_container = tk.Frame(parent, bg='white')
 		list_container.pack(fill="both", expand=True)
 		
-		# Treeview com 13 colunas para compatibilidade total com salvar/carregar/PDF
-		columns = ("tipo", "nome", "qtd", "valor_unit", "mao_obra", "deslocamento", "estadia", "meses", "inicio", "fim", "valor_total", "descricao", "tipo_operacao")
+		# Treeview com 14 colunas para compatibilidade total com salvar/carregar/PDF (incluindo ICMS)
+		columns = ("tipo", "nome", "qtd", "valor_unit", "mao_obra", "deslocamento", "estadia", "meses", "inicio", "fim", "valor_total", "descricao", "tipo_operacao", "icms")
 		self.itens_tree = ttk.Treeview(list_container, columns=columns, show="headings", height=8)
 		
 		# Cabeçalhos
@@ -913,6 +913,7 @@ class CotacoesModule(BaseModule):
 		self.itens_tree.heading("valor_total", text="Total")
 		self.itens_tree.heading("descricao", text="Descrição")
 		self.itens_tree.heading("tipo_operacao", text="Operação")
+		self.itens_tree.heading("icms", text="ICMS")
 		
 		# Larguras
 		self.itens_tree.column("tipo", width=80, minwidth=70)
@@ -928,6 +929,7 @@ class CotacoesModule(BaseModule):
 		self.itens_tree.column("valor_total", width=100, minwidth=90)
 		self.itens_tree.column("descricao", width=220, minwidth=160)
 		self.itens_tree.column("tipo_operacao", width=90, minwidth=70)
+		self.itens_tree.column("icms", width=80, minwidth=70)
 		
 		# Scrollbars vertical e horizontal
 		v_scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.itens_tree.yview)
@@ -1148,7 +1150,7 @@ class CotacoesModule(BaseModule):
 			tipo_operacao = 'Compra'
 			descricao_completa = descricao
 		
-		# Adicionar à lista no formato de 13 colunas
+		# Adicionar à lista no formato de 14 colunas (incluindo ICMS)
 		if modo == 'Locação':
 			self.itens_tree.insert("", "end", values=(
 				"Produto",
@@ -1163,9 +1165,20 @@ class CotacoesModule(BaseModule):
 				fim_fmt,
 				format_currency(valor_total),
 				descricao_completa,
-				"Locação"
+				"Locação",
+				format_currency(0)  # ICMS para locação
 			))
 		else:
+			# Obter ICMS baseado na filial
+			icms_val = 0
+			try:
+				filial_str = self.filial_var.get()
+				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
+				if filial_id == 2:
+					icms_val = clean_number(self.item_icms_var.get())
+			except Exception:
+				icms_val = 0
+			
 			self.itens_tree.insert("", "end", values=(
 				tipo,
 				nome,
@@ -1179,7 +1192,8 @@ class CotacoesModule(BaseModule):
 				"",
 				format_currency(valor_total),
 				descricao_completa,
-				"Compra"
+				"Compra",
+				format_currency(icms_val)
 			))
 			# Guardar ICMS no último item via atributo associado (usar hidden mapping se necessário)
 			if not hasattr(self, '_icms_por_item_idx'):
@@ -1539,10 +1553,10 @@ class CotacoesModule(BaseModule):
 			# Inserir itens
 			for item in self.itens_tree.get_children():
 				values = self.itens_tree.item(item)['values']
-				# Esperado 13 colunas
-				if len(values) != 13:
+				# Esperado 14 colunas (incluindo ICMS)
+				if len(values) != 14:
 					continue
-				tipo, nome, qtd, valor_unit, mao_obra, desloc, estadia, meses, inicio, fim, total, desc, tipo_operacao = values
+				tipo, nome, qtd, valor_unit, mao_obra, desloc, estadia, meses, inicio, fim, total, desc, tipo_operacao, icms = values
 				quantidade = float(qtd)
 				valor_unitario = clean_number(valor_unit)
 				valor_mao_obra = clean_number(mao_obra)
@@ -1556,16 +1570,8 @@ class CotacoesModule(BaseModule):
 				# Forçar tipo_operacao conforme modo
 				if modo == 'Locação':
 					tipo_operacao = 'Locação'
-				# Obter ICMS salvo para esta linha (se houver e quando filial 2)
-				icms_item_val = 0
-				try:
-					filial_str_local = self.filial_var.get()
-					filial_id_local = int(filial_str_local.split(' - ')[0]) if ' - ' in filial_str_local else int(filial_str_local)
-					if filial_id_local == 2 and hasattr(self, '_icms_por_item_idx'):
-						# Buscar por nome/índice; fallback 0
-						icms_item_val = 0
-				except Exception:
-					icms_item_val = 0
+				# Obter ICMS da tree
+				icms_item_val = clean_number(icms)
 				c.execute("""
 					INSERT INTO itens_cotacao (cotacao_id, tipo, item_nome, quantidade,
 										 valor_unitario, valor_total_item, descricao,
@@ -1850,13 +1856,13 @@ class CotacoesModule(BaseModule):
 			c.execute("""
 				SELECT tipo, item_nome, quantidade, valor_unitario, valor_total_item,
 				       descricao, mao_obra, deslocamento, estadia,
-				       locacao_qtd_meses, locacao_data_inicio, locacao_data_fim, tipo_operacao
+				       locacao_qtd_meses, locacao_data_inicio, locacao_data_fim, tipo_operacao, icms
 				FROM itens_cotacao
 				WHERE cotacao_id = ?
 				ORDER BY id
 			""", (cotacao_id,))
 			for row in c.fetchall():
-				(tipo, nome, qtd, valor_unit, total, desc, mao_obra, desloc, estadia, meses, inicio, fim, tipo_oper) = row
+				(tipo, nome, qtd, valor_unit, total, desc, mao_obra, desloc, estadia, meses, inicio, fim, tipo_oper, icms) = row
 				self.itens_tree.insert("", "end", values=(
 					tipo or "Produto",
 					nome,
@@ -1870,7 +1876,8 @@ class CotacoesModule(BaseModule):
 					(format_date(fim) if fim else ""),
 					format_currency(total),
 					desc or "",
-					tipo_oper or "Compra"
+					tipo_oper or "Compra",
+					format_currency(icms or 0)
 				))
 			self.atualizar_total()
 		except sqlite3.Error as e:

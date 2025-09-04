@@ -403,7 +403,10 @@ class ProdutosModule(BaseModule):
             # Tratar "Serviços" (UI) como equivalente a "Kit" (DB) para comparação
             def _normalize_tipo(t):
                 return "Kit" if t == "Serviços" else t
-            if self.current_produto_id and self.loaded_tipo_atual and _normalize_tipo(current_tipo) != self.loaded_tipo_atual:
+            # Só resetar se realmente for uma mudança de tipo (não apenas nomenclatura)
+            if (self.current_produto_id and self.loaded_tipo_atual and 
+                _normalize_tipo(current_tipo) != self.loaded_tipo_atual and
+                not (_normalize_tipo(current_tipo) == "Kit" and self.loaded_tipo_atual == "Kit")):
                 # Resetar ID para forçar INSERT em vez de UPDATE
                 self.current_produto_id = None
                 # Para segurança, quando destino for Kit, iniciar composição vazia
@@ -413,9 +416,7 @@ class ProdutosModule(BaseModule):
                         self.atualizar_kit_tree()
                 # Informar usuário (opcional)
                 try:
-                    # Não mostrar aviso quando a alteração for apenas nomenclatura (Kit <-> Serviços)
-                    if not (_normalize_tipo(current_tipo) == self.loaded_tipo_atual == "Kit"):
-                        self.show_info("Novo cadastro", f"Alterar o tipo de {self.loaded_tipo_atual} para {current_tipo} criará um novo cadastro.")
+                    self.show_info("Novo cadastro", f"Alterar o tipo de {self.loaded_tipo_atual} para {current_tipo} criará um novo cadastro.")
                 except Exception:
                     pass
         except Exception:
@@ -432,6 +433,7 @@ class ProdutosModule(BaseModule):
                         self.atualizar_kit_tree()
             else:
                 self.kit_section_frame.pack_forget()
+        
             
     def format_valor(self, event):
         """Formatar valor monetário"""
