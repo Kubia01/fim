@@ -414,18 +414,11 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         pdf.set_font("Arial", size=11)
         texto_apresentacao = None
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
-            # Imprimir com parte em negrito: "LOCACAO DE COMPRESSOR DE AR"
-            inicio_texto = (
+            # Texto completo com linha alvo mantendo posição e tamanho originais
+            texto_str = (
                 "Prezados Senhores:\n\n"
                 "Agradecemos por nos conceder a oportunidade de apresentarmos nossa proposta para\n"
-                "fornecimento de "
-            )
-            pdf.multi_cell(0, 5, clean_text(inicio_texto))
-            pdf.set_font("Arial", 'B', 11)
-            pdf.cell(0, 5, clean_text("LOCACAO DE COMPRESSOR DE AR"), 0, 1, 'L')
-            pdf.set_font("Arial", '', 11)
-            restante_texto = (
-                ".\n\n"
+                "fornecimento de LOCACAO DE COMPRESSOR DE AR.\n\n"
                 "A World Comp Compressores e especializada em manutencao de compressores de parafuso\n"
                 "das principais marcas do mercado, como Atlas Copco, Ingersoll Rand, Chicago. Atuamos tambem com\n"
                 "revisao de equipamentos e unidades compressoras, venda de pecas, bem como venda e locacao de\n"
@@ -434,8 +427,20 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
                 "disposicao para analisar, corrigir e prestar os devidos esclarecimentos, sempre buscando atender as\n"
                 "especificacoes e necessidades dos nossos clientes."
             )
-            restante_texto = replace_company_names(clean_text(restante_texto), dados_filial.get('nome'))
-            pdf.multi_cell(0, 5, restante_texto)
+            texto_str = replace_company_names(clean_text(texto_str), dados_filial.get('nome'))
+            alvo = "LOCACAO DE COMPRESSOR DE AR"
+            for linha in texto_str.splitlines(True):
+                if alvo in linha:
+                    antes, _, depois = linha.partition(alvo)
+                    pdf.set_font("Arial", '', 11)
+                    pdf.write(5, clean_text(antes))
+                    pdf.set_font("Arial", 'B', 11)
+                    pdf.write(5, clean_text(alvo))
+                    pdf.set_font("Arial", '', 11)
+                    pdf.write(5, clean_text(depois))
+                else:
+                    pdf.write(5, clean_text(linha))
+            texto_apresentacao = None
         else:
             modelo_text = f" {modelo_compressor}" if modelo_compressor else ""
             texto_apresentacao = clean_text(f"""
@@ -714,6 +719,16 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     return f"R$ {v:.2f}"
             pdf.cell(sum(col_w[:-1]), 10, clean_text("TOTAL GERAL:"), 1, 0, 'R', 1)
             pdf.cell(col_w[-1], 10, clean_text(brl(total_geral)), 1, 1, 'R', 1)
+
+            # Condições comerciais imediatamente abaixo da tabela (Página 5)
+            pdf.ln(6)
+            pdf.set_font("Arial", 'B', 11)
+            pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
+            pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
+            pdf.cell(0, 5, clean_text(f"Prazo de Entrega: {prazo_entrega if prazo_entrega else 'A combinar'}"), 0, 1, 'L')
+            pdf.cell(0, 5, clean_text(f"Moeda: {moeda if moeda else 'BRL (Real Brasileiro)'}"), 0, 1, 'L')
 
             # =====================================================
             # PÁGINA 6: CONDIÇÕES DE PAGAMENTO e CONDIÇÕES COMERCIAIS
