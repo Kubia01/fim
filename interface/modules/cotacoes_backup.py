@@ -437,7 +437,7 @@ class CotacoesModule(BaseModule):
 		self.tipo_label.grid(row=0, column=0, padx=5, sticky="w")
 		
 		self.tipo_combo = ttk.Combobox(compra_grid, textvariable=self.item_tipo_var, 
-								  values=["Produto", "Serviço", "Kit"], 
+								  values=["Produto", "Serviços"], 
 								  width=20, state="readonly")
 		self.tipo_combo.grid(row=0, column=1, padx=(2, 5), sticky="w")
 		self.tipo_combo.bind("<<ComboboxSelected>>", self.on_tipo_changed)
@@ -577,7 +577,7 @@ class CotacoesModule(BaseModule):
 		tipo = self.item_tipo_var.get()
 		
 		# Mostrar/ocultar campos de serviço
-		if tipo == "Serviço":
+		if tipo == "Serviço" or tipo == "Serviços":
 			self.servico_frame.grid()
 		else:
 			self.servico_frame.grid_remove()
