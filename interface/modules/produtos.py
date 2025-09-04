@@ -568,6 +568,7 @@ class ProdutosModule(BaseModule):
             
         nome = self.nome_var.get().strip()
         tipo = self.tipo_var.get()
+        tipo_db = "Kit" if tipo == "Serviços" else tipo
         
         if not nome:
             self.show_warning("O nome é obrigatório.")
@@ -602,7 +603,7 @@ class ProdutosModule(BaseModule):
         
         try:
             dados = (
-                nome, tipo, self.ncm_var.get().strip(),
+                nome, tipo_db, self.ncm_var.get().strip(),
                 valor, self.descricao_var.get().strip(),
                 1 if self.ativo_var.get() else 0
             )
