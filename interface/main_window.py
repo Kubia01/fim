@@ -171,9 +171,9 @@ class MainWindow:
         # Clientes
         if self.has_access('clientes'):
             self.clientes_module = add_module("👥 Clientes", "interface.modules.clientes", "ClientesModule")
-        # Produtos
+        # Cadastros (antes: Produtos)
         if self.has_access('produtos'):
-            self.produtos_module = add_module("📦 Produtos", "interface.modules.produtos", "ProdutosModule")
+            self.produtos_module = add_module("📦 Cadastros", "interface.modules.produtos", "ProdutosModule")
         # Compras (Cotações de compra)
         if self.has_access('cotacoes'):
             self.cotacoes_module = add_module("💼 Serviços", "interface.modules.cotacoes", "CotacoesModule")

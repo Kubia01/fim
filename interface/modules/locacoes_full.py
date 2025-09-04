@@ -126,6 +126,8 @@ class LocacoesModule(BaseModule):
 		self.modelo_var = tk.StringVar()
 		self.observacoes_var = tk.StringVar()
 		self.condicao_pagamento_var = tk.StringVar()
+		self.tipo_frete_var = tk.StringVar(value="FOB")
+		self.prazo_entrega_var = tk.StringVar()
 
 		tk.Label(dados, text="Número da Proposta *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
 		tk.Entry(dados, textvariable=self.numero_var, font=('Arial', 10), width=30).grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
@@ -156,6 +158,16 @@ class LocacoesModule(BaseModule):
 
 		tk.Label(dados, text="Condição de Pagamento *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
 		tk.Entry(dados, textvariable=self.condicao_pagamento_var, font=('Arial', 10), width=50).grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
+		row += 1
+
+		# Tipo de Frete e Prazo de Entrega
+		tk.Label(dados, text="Tipo de Frete:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
+		tipo_frete_combo = ttk.Combobox(dados, textvariable=self.tipo_frete_var, values=["FOB", "CIF", "A combinar"], width=27, state="readonly")
+		tipo_frete_combo.grid(row=row, column=1, sticky="w", padx=(10, 0), pady=5)
+		row += 1
+
+		tk.Label(dados, text="Prazo de Entrega:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
+		tk.Entry(dados, textvariable=self.prazo_entrega_var, font=('Arial', 10), width=50).grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
 		row += 1
 
 		# Observações
@@ -475,14 +487,14 @@ class LocacoesModule(BaseModule):
 					UPDATE cotacoes
 					SET numero_proposta=?, cliente_id=?, responsavel_id=?, filial_id=?, data_criacao=?,
 						data_validade=?, modelo_compressor=?, observacoes=?, valor_total=?, status=?,
-						condicao_pagamento=?, prazo_entrega=?, esboco_servico=?, relacao_pecas_substituir=?,
+						tipo_frete=?, condicao_pagamento=?, prazo_entrega=?, esboco_servico=?, relacao_pecas_substituir=?,
 						tipo_cotacao=?, contato_nome=?
 					WHERE id=?
 					""",
 					(
 						numero, cliente_id, self.user_id, filial_id, datetime.now().strftime('%Y-%m-%d'),
 						data_validade, self.modelo_var.get().strip(), self.observacoes_text.get("1.0", tk.END).strip(), total, "Em Aberto",
-						cond_pgto, "", "", "",
+						self.tipo_frete_var.get().strip(), cond_pgto, self.prazo_entrega_var.get().strip(), "", "",
 						"Locação", self.contato_cliente_var.get().strip(),
 						self.current_cotacao_id,
 					),
@@ -494,14 +506,14 @@ class LocacoesModule(BaseModule):
 					"""
 					INSERT INTO cotacoes (
 						numero_proposta, cliente_id, responsavel_id, data_criacao, data_validade,
-						modelo_compressor, observacoes, valor_total, status, condicao_pagamento, prazo_entrega,
+						modelo_compressor, observacoes, valor_total, status, tipo_frete, condicao_pagamento, prazo_entrega,
 						filial_id, esboco_servico, relacao_pecas_substituir, tipo_cotacao,
 						contato_nome
 					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					""",
 					(
 						numero, cliente_id, self.user_id, datetime.now().strftime('%Y-%m-%d'), None,
-						self.modelo_var.get().strip(), self.observacoes_text.get("1.0", tk.END).strip(), total, "Em Aberto", cond_pgto, "",
+						self.modelo_var.get().strip(), self.observacoes_text.get("1.0", tk.END).strip(), total, "Em Aberto", self.tipo_frete_var.get().strip(), cond_pgto, self.prazo_entrega_var.get().strip(),
 						filial_id, "", "", "Locação",
 						self.contato_cliente_var.get().strip(),
 					),
@@ -552,6 +564,8 @@ class LocacoesModule(BaseModule):
 		self.filial_var.set("2")
 		self.modelo_var.set("")
 		self.condicao_pagamento_var.set("")
+		self.tipo_frete_var.set("FOB")
+		self.prazo_entrega_var.set("")
 		self.observacoes_text.delete("1.0", tk.END)
 		for iid in self.itens_tree.get_children():
 			self.itens_tree.delete(iid)
@@ -747,7 +761,7 @@ class LocacoesModule(BaseModule):
 			c.execute(
 				"""
 				SELECT id, numero_proposta, cliente_id, responsavel_id, filial_id, data_validade, modelo_compressor,
-				       observacoes, valor_total, status, contato_nome, condicao_pagamento
+				       observacoes, valor_total, status, contato_nome, condicao_pagamento, tipo_frete, prazo_entrega
 				FROM cotacoes
 				WHERE id = ? AND tipo_cotacao = 'Locação'
 				""",
@@ -759,7 +773,7 @@ class LocacoesModule(BaseModule):
 				return
 			(
 				cid, numero, cliente_id, responsavel_id, filial_id, data_validade, modelo_compressor,
-				observacoes, valor_total, status, contato_nome, cond_pgto
+				observacoes, valor_total, status, contato_nome, cond_pgto, tipo_frete, prazo_entrega
 			) = row
 			self.current_cotacao_id = cid
 			self.numero_var.set(numero)
@@ -779,6 +793,8 @@ class LocacoesModule(BaseModule):
 			self.filial_var.set(str(filial_id))
 			self.modelo_var.set(modelo_compressor or "")
 			self.condicao_pagamento_var.set(cond_pgto or "")
+			self.tipo_frete_var.set(tipo_frete or "FOB")
+			self.prazo_entrega_var.set(prazo_entrega or "")
 			self.observacoes_text.delete("1.0", tk.END)
 			if observacoes:
 				self.observacoes_text.insert("1.0", observacoes)
