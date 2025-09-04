@@ -30,19 +30,19 @@ class ProdutosModule(BaseModule):
         header_frame = tk.Frame(parent, bg='#f8fafc')
         header_frame.pack(fill="x", pady=(0, 20))
         
-        title_label = tk.Label(header_frame, text="Gestão de Produtos/Serviços/Kits", 
+        title_label = tk.Label(header_frame, text="Gestão de Produtos/Serviços", 
                                font=('Arial', 18, 'bold'), bg='#f8fafc', fg='#1e293b')
         title_label.pack(side="left")
         
     def create_produto_unificado_tab(self):
         produto_frame = tk.Frame(self.notebook, bg='white')
-        self.notebook.add(produto_frame, text="Produto/Serviço/Kit")
+        self.notebook.add(produto_frame, text="Produto/Serviços")
         
         content_frame = tk.Frame(produto_frame, bg='white', padx=20, pady=20)
         content_frame.pack(fill="both", expand=True)
         
         # Seção principal
-        section_frame = self.create_section_frame(content_frame, "Dados do Produto/Serviço")
+        section_frame = self.create_section_frame(content_frame, "Dados do Produto/Serviços")
         section_frame.pack(fill="x", pady=(0, 15))
         
         fields_frame = tk.Frame(section_frame, bg='white')
@@ -66,7 +66,7 @@ class ProdutosModule(BaseModule):
         # Tipo
         tk.Label(fields_frame, text="Tipo *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
         tipo_combo = ttk.Combobox(fields_frame, textvariable=self.tipo_var, 
-                                 values=["Produto", "Serviço", "Kit"], width=37, state="readonly")
+                                 values=["Produto", "Serviços"], width=37, state="readonly")
         tipo_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         tipo_combo.bind('<<ComboboxSelected>>', self.on_tipo_changed)
         row += 1
@@ -110,7 +110,7 @@ class ProdutosModule(BaseModule):
         
     def create_kit_integrado_section(self, parent):
         """Seção de kit integrada na aba de produtos"""
-        self.kit_section_frame = self.create_section_frame(parent, "Composição do Kit")
+        self.kit_section_frame = self.create_section_frame(parent, "Composição de Serviços")
         self.kit_section_frame.pack(fill="both", expand=True, pady=(15, 0))
         
         # Inicialmente oculto
@@ -134,7 +134,7 @@ class ProdutosModule(BaseModule):
         fields_frame.pack(fill="x")
         
         # Produto/Serviço
-        tk.Label(fields_frame, text="Produto/Serviço:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, sticky="w", pady=5)
+        tk.Label(fields_frame, text="Produto:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, sticky="w", pady=5)
         self.produto_kit_combo = ttk.Combobox(fields_frame, textvariable=self.item_produto_var, width=40, state="readonly")
         self.produto_kit_combo.grid(row=0, column=1, sticky="ew", padx=(5, 10), pady=5)
         
@@ -164,7 +164,7 @@ class ProdutosModule(BaseModule):
         self.kit_items_tree = ttk.Treeview(lista_frame, columns=columns, show="headings", height=6)
         
         # Cabeçalhos
-        self.kit_items_tree.heading("produto", text="Produto/Serviço")
+        self.kit_items_tree.heading("produto", text="Produto")
         self.kit_items_tree.heading("tipo", text="Tipo")
         self.kit_items_tree.heading("quantidade", text="Quantidade")
         
@@ -196,13 +196,13 @@ class ProdutosModule(BaseModule):
         
     def create_kit_tab(self):
         kit_frame = tk.Frame(self.notebook, bg='white')
-        self.notebook.add(kit_frame, text="Kit")
+        self.notebook.add(kit_frame, text="Serviços")
         
         content_frame = tk.Frame(kit_frame, bg='white', padx=20, pady=20)
         content_frame.pack(fill="both", expand=True)
         
         # Seção: Dados do Kit
-        section_frame = self.create_section_frame(content_frame, "Dados do Kit")
+        section_frame = self.create_section_frame(content_frame, "Dados de Serviços")
         section_frame.pack(fill="x", pady=(0, 15))
         
         fields_frame = tk.Frame(section_frame, bg='white')
@@ -216,7 +216,7 @@ class ProdutosModule(BaseModule):
         row = 0
         
         # Nome do Kit
-        tk.Label(fields_frame, text="Nome do Kit *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
+        tk.Label(fields_frame, text="Nome dos Serviços *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
         tk.Entry(fields_frame, textvariable=self.kit_nome_var, font=('Arial', 10), width=40).grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         row += 1
         
@@ -232,7 +232,7 @@ class ProdutosModule(BaseModule):
         fields_frame.grid_columnconfigure(1, weight=1)
         
         # Seção: Adicionar Itens ao Kit
-        add_section = self.create_section_frame(content_frame, "Adicionar Itens ao Kit")
+        add_section = self.create_section_frame(content_frame, "Adicionar Itens aos Serviços")
         add_section.pack(fill="x", pady=(15, 0))
         
         add_frame = tk.Frame(add_section, bg='white')
@@ -248,7 +248,7 @@ class ProdutosModule(BaseModule):
         # Tipo de Item
         tk.Label(add_frame, text="Tipo:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
         item_tipo_combo = ttk.Combobox(add_frame, textvariable=self.item_tipo_var, 
-                                      values=["Produto", "Serviço"], width=15, state="readonly")
+                                      values=["Produto"], width=15, state="readonly")
         item_tipo_combo.grid(row=row, column=1, sticky="w", padx=(10, 0), pady=5)
         item_tipo_combo.bind('<<ComboboxSelected>>', self.on_item_tipo_changed)
         
@@ -268,7 +268,7 @@ class ProdutosModule(BaseModule):
         add_item_btn.grid(row=row, column=6, padx=(20, 0), pady=5)
         
         # Lista de itens do kit
-        lista_section = self.create_section_frame(content_frame, "Itens do Kit")
+        lista_section = self.create_section_frame(content_frame, "Itens dos Serviços")
         lista_section.pack(fill="both", expand=True, pady=(15, 0))
         
         # Treeview para itens do kit
@@ -337,9 +337,9 @@ class ProdutosModule(BaseModule):
         tipos_notebook.pack(fill="both", expand=True)
         
         self.trees_por_tipo = {}
-        for tipo in ["Produto", "Serviço", "Kit"]:
+        for tipo in ["Produto", "Kit"]:
             tab = tk.Frame(tipos_notebook, bg='white')
-            tipos_notebook.add(tab, text=tipo)
+            tipos_notebook.add(tab, text=("Serviços" if tipo=="Kit" else tipo))
             
             inner = tk.Frame(tab, bg='white')
             inner.pack(fill="both", expand=True)
@@ -357,7 +357,7 @@ class ProdutosModule(BaseModule):
             tree.pack(side="left", fill="both", expand=True)
             scrollbar.pack(side="right", fill="y")
             
-            self.trees_por_tipo[tipo] = tree
+            self.trees_por_tipo["Serviços" if tipo=="Kit" else tipo] = tree
         
         # Botões
         lista_buttons = tk.Frame(container, bg='white')
@@ -378,11 +378,7 @@ class ProdutosModule(BaseModule):
         print(f"DEBUG: Tipo alterado para: {current_tipo}")  # Debug
         
         # Controlar campo NCM
-        if current_tipo == "Serviço":
-            self.ncm_entry.config(state='disabled')
-            self.ncm_var.set("")
-            print("DEBUG: Campo NCM desabilitado para Serviço")  # Debug
-        else:
+        if True:
             self.ncm_entry.config(state='normal')
             print("DEBUG: Campo NCM habilitado")  # Debug
         
@@ -394,7 +390,7 @@ class ProdutosModule(BaseModule):
                 print(f"DEBUG: Alteração de tipo {self.loaded_tipo_atual} -> {current_tipo}; resetando ID para novo cadastro")
                 self.current_produto_id = None
                 # Para segurança, quando destino for Kit, iniciar composição vazia
-                if current_tipo == "Kit":
+                if current_tipo == "Serviços":
                     self.kit_items = []
                     if hasattr(self, 'kit_items_tree'):
                         self.atualizar_kit_tree()
@@ -408,7 +404,7 @@ class ProdutosModule(BaseModule):
 
         # Controlar seção de kit
         if hasattr(self, 'kit_section_frame'):
-            if current_tipo == "Kit":
+            if current_tipo == "Serviços":
                 self.kit_section_frame.pack(fill="both", expand=True, pady=(15, 0))
                 print("DEBUG: Seção de kit EXIBIDA")  # Debug
                 # Se estamos iniciando um novo cadastro (sem ID), garantir que a composição do kit comece vazia
@@ -437,13 +433,13 @@ class ProdutosModule(BaseModule):
             conn = sqlite3.connect(DB_NAME)
             c = conn.cursor()
             
-            # Buscar apenas produtos e serviços (não kits)
-            c.execute("SELECT id, nome, tipo FROM produtos WHERE tipo IN ('Produto', 'Serviço') AND ativo = 1 ORDER BY nome")
+            # Buscar apenas produtos (itens que compõem Serviços)
+            c.execute("SELECT id, nome, tipo FROM produtos WHERE tipo IN ('Produto') AND ativo = 1 ORDER BY nome")
             produtos = c.fetchall()
             
             # Limpar e popular combobox
             if hasattr(self, 'produto_kit_combo'):
-                valores = [f"{row[1]} ({row[2]})" for row in produtos]
+                valores = [f"{row[1]} (Produto)" for row in produtos]
                 self.produto_kit_combo['values'] = valores
                 
                 # Armazenar mapeamento id -> index
@@ -480,7 +476,7 @@ class ProdutosModule(BaseModule):
             return
             
         produto_id = self.produtos_kit_map[index]
-        produto_nome, produto_tipo = self.produtos_kit_data[index][1], self.produtos_kit_data[index][2]
+        produto_nome, produto_tipo = self.produtos_kit_data[index][1], 'Produto'
         
         # Verificar se já existe
         for item in self.kit_items:
@@ -582,7 +578,7 @@ class ProdutosModule(BaseModule):
             return
         
         # Validação específica para kit
-        if tipo == "Kit" and not self.kit_items:
+        if tipo == "Serviços" and not self.kit_items:
             self.show_warning("Um kit deve ter pelo menos um item!")
             return
             
@@ -595,7 +591,7 @@ class ProdutosModule(BaseModule):
         # Prevenir que um produto vire kit sem intenção: caso um registro existente de Produto/Serviço
         # esteja com tipo alterado para "Kit", forçar novo cadastro (não UPDATE)
         try:
-            if self.current_produto_id and self.loaded_tipo_atual and tipo == "Kit" and self.loaded_tipo_atual != "Kit":
+            if self.current_produto_id and self.loaded_tipo_atual and tipo == "Serviços" and self.loaded_tipo_atual != "Kit":
                 print("DEBUG: Convertendo Produto/Serviço em Kit - criando novo cadastro de Kit")
                 self.current_produto_id = None
         except Exception:
@@ -620,7 +616,7 @@ class ProdutosModule(BaseModule):
                 """, dados + (self.current_produto_id,))
                 
                 # Se for kit, limpar itens existentes
-                if tipo == "Kit":
+                if tipo == "Serviços":
                     c.execute("DELETE FROM kit_items WHERE kit_id = ?", (self.current_produto_id,))
             else:
                 # Inserir novo produto
@@ -631,7 +627,7 @@ class ProdutosModule(BaseModule):
                 self.current_produto_id = c.lastrowid
             
             # Se for kit, salvar itens
-            if tipo == "Kit":
+            if tipo == "Serviços":
                 for item in self.kit_items:
                     c.execute("""
                         INSERT INTO kit_items (kit_id, produto_id, quantidade)
@@ -640,7 +636,7 @@ class ProdutosModule(BaseModule):
             
             conn.commit()
             
-            tipo_nome = "Kit" if tipo == "Kit" else "Produto"
+            tipo_nome = "Serviços" if tipo == "Serviços" else "Produto"
             self.show_success(f"{tipo_nome} salvo com sucesso!")
             
             # Emitir evento
@@ -649,9 +645,9 @@ class ProdutosModule(BaseModule):
             self.carregar_produtos()
             self.carregar_produtos_para_kit()  # Atualizar lista para kits
             # Atualizar tipo carregado atual para refletir o registro em edição
-            self.loaded_tipo_atual = tipo
+            self.loaded_tipo_atual = ("Kit" if tipo == "Serviços" else tipo)
             # Evitar reaproveitar composição anterior em um novo kit
-            if tipo == "Kit":
+            if tipo == "Serviços":
                 self.kit_items = []
                 if hasattr(self, 'kit_items_tree'):
                     self.atualizar_kit_tree()
@@ -670,7 +666,7 @@ class ProdutosModule(BaseModule):
         """Carregar lista de produtos em três abas por tipo"""
         # Limpar listas atuais
         if hasattr(self, 'trees_por_tipo'):
-            for tree in self.trees_por_tipo.values():
+            for tipo, tree in self.trees_por_tipo.items():
                 for item in tree.get_children():
                     tree.delete(item)
          
@@ -686,7 +682,8 @@ class ProdutosModule(BaseModule):
             """)
             for row in c.fetchall():
                 produto_id, nome, tipo, valor, ativo = row
-                tree = self.trees_por_tipo.get(tipo)
+                display_tipo = ("Serviços" if tipo == "Kit" else tipo)
+                tree = self.trees_por_tipo.get(display_tipo)
                 if tree is None:
                     continue
                 tree.insert("", "end", values=(
@@ -706,7 +703,7 @@ class ProdutosModule(BaseModule):
          
         # Limpar listas atuais
         if hasattr(self, 'trees_por_tipo'):
-            for tree in self.trees_por_tipo.values():
+            for tipo, tree in self.trees_por_tipo.items():
                 for item in tree.get_children():
                     tree.delete(item)
          
@@ -730,7 +727,8 @@ class ProdutosModule(BaseModule):
              
             for row in c.fetchall():
                 produto_id, nome, tipo, valor, ativo = row
-                tree = self.trees_por_tipo.get(tipo)
+                display_tipo = ("Serviços" if tipo == "Kit" else tipo)
+                tree = self.trees_por_tipo.get(display_tipo)
                 if tree is None:
                     continue
                 tree.insert("", "end", values=(
@@ -961,7 +959,7 @@ class ProdutosModule(BaseModule):
             return
             
         produto_id = self.produtos_kit_map[index]
-        produto_nome, produto_tipo = self.produtos_kit_data[index][1], self.produtos_kit_data[index][2]
+        produto_nome, produto_tipo = self.produtos_kit_data[index][1], 'Produto'
         
         # Verificar se já existe
         for item in self.kit_items:
