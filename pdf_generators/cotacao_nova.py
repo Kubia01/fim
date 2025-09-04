@@ -429,9 +429,11 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
             )
             texto_str = replace_company_names(clean_text(texto_str), dados_filial.get('nome'))
             alvo = "LOCACAO DE COMPRESSOR DE AR"
-            for linha in texto_str.splitlines(True):
-                if alvo in linha:
-                    antes, _, depois = linha.partition(alvo)
+            paragrafos = texto_str.split("\n\n")
+            for idx, par in enumerate(paragrafos):
+                # Reimprimir parágrafo preservando negrito inline do alvo
+                if alvo in par:
+                    antes, _, depois = par.partition(alvo)
                     pdf.set_font("Arial", '', 11)
                     pdf.write(5, clean_text(antes))
                     pdf.set_font("Arial", 'B', 11)
@@ -439,7 +441,12 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
                     pdf.set_font("Arial", '', 11)
                     pdf.write(5, clean_text(depois))
                 else:
-                    pdf.write(5, clean_text(linha))
+                    pdf.multi_cell(0, 5, clean_text(par))
+                # Quebra entre parágrafos
+                pdf.ln(5)
+                # Após o 2º parágrafo (idx == 1), inserir 4 linhas extras
+                if idx == 1:
+                    pdf.ln(20)
             texto_apresentacao = None
         else:
             modelo_text = f" {modelo_compressor}" if modelo_compressor else ""
@@ -455,7 +462,13 @@ Com profissionais altamente qualificados e atendimento especializado, colocamo-n
 Atenciosamente,
             """)
         if texto_apresentacao:
-            pdf.multi_cell(0, 5, texto_apresentacao)
+            # Serviços: inserir 4 linhas extras após o segundo parágrafo
+            partes = texto_apresentacao.split("\n\n")
+            for idx, par in enumerate(partes):
+                pdf.multi_cell(0, 5, clean_text(par))
+                pdf.ln(5)
+                if idx == 1:
+                    pdf.ln(20)
         
         # Assinatura na parte inferior da página 2
         pdf.set_y(240)  # Posiciona mais baixo para garantir que fique na página 2
@@ -631,17 +644,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 imagem_pagina4 = locacao_imagem_path_db
 
             if imagem_pagina4:
-                # Padronizar tamanho como página 7 (~70x24) e aumentar em 30%
-                max_w, max_h = 70, 24
-                try:
-                    from PIL import Image
-                    img = Image.open(imagem_pagina4)
-                    iw, ih = img.size
-                    ratio = min(max_w / iw, max_h / ih)
-                    w = iw * ratio * 1.3
-                    h = ih * ratio * 1.3
-                except Exception:
-                    w, h = 70 * 1.3, 24 * 1.3
+                # Padronizar tamanho para todas as imagens (30% maior que o padrão antigo 70x24)
+                w, h = 70 * 1.3, 24 * 1.3
                 x = (210 - w) / 2
                 y = pdf.get_y() + 10
                 if y + h > 270:
@@ -823,17 +827,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             except Exception:
                 pass
             if imagem_p7:
-                try:
-                    from PIL import Image
-                    # Tamanho base (70x24) e aumentar em 30%
-                    max_w, max_h = 70, 24
-                    img = Image.open(imagem_p7)
-                    iw, ih = img.size
-                    ratio = min(max_w / iw, max_h / ih)
-                    w = iw * ratio * 1.3
-                    h = ih * ratio * 1.3
-                except Exception:
-                    w, h = 70 * 1.3, 24 * 1.3
+                # Padronizar tamanho para todas as imagens (30% maior que o padrão antigo 70x24)
+                w, h = 70 * 1.3, 24 * 1.3
                 x = (210 - w) / 2
                 y = 77
                 pdf.image(imagem_p7, x=x, y=y, w=w, h=h)
