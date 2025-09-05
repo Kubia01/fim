@@ -1151,9 +1151,14 @@ class ProdutosModule(BaseModule):
         except Exception:
             pass
             
-        # Aplicar modo readonly apenas para visualização (não bloqueia campos, apenas botões)
-        self.apply_readonly_for_visualization()
+        # Aguardar um momento para garantir que os dados sejam carregados
+        self.frame.after(100, lambda: self._aplicar_readonly_visualizacao())
         
         # Mostrar mensagem informativa
         self.show_info("Visualizando produto em modo consulta. Os dados não podem ser editados.")
+        
+    def _aplicar_readonly_visualizacao(self):
+        """Aplica readonly após os dados serem carregados"""
+        if not self.can_edit('produtos'):
+            self.apply_readonly_for_visualization()
         

@@ -130,10 +130,16 @@ class BaseModule:
                 # Para campos de texto, aplicar readonly mas manter visível
                 try:
                     if isinstance(widget, tk.Entry):
-                        widget.config(state='readonly', readonlybackground='#f0f0f0')
+                        # Usar readonly para Entry - mantém o texto visível
+                        widget.config(state='readonly', readonlybackground='#f8f8f8')
+                        print(f"   🔍 Campo Entry em modo readonly: {widget.get()[:30]}...")
                     else:  # tk.Text
-                        widget.config(state='disabled', bg='#f0f0f0')
-                except:
+                        # Para Text, usar normal primeiro para garantir que o conteúdo seja visível
+                        widget.config(state='normal')
+                        widget.config(state='disabled', bg='#f8f8f8')
+                        print(f"   🔍 Campo Text em modo readonly")
+                except Exception as e:
+                    print(f"   ⚠️ Erro ao configurar campo: {e}")
                     pass
                     
             elif isinstance(widget, ttk.Entry):
