@@ -856,6 +856,11 @@ class ProdutosModule(BaseModule):
                     pass
                 try:
                     if hasattr(self, 'esboco_servico_text'):
+                        # Garantir que o campo esteja habilitado para escrever
+                        try:
+                            self.esboco_servico_text.config(state='normal')
+                        except Exception:
+                            pass
                         self.esboco_servico_text.delete("1.0", tk.END)
                         if produto[6]:
                             self.esboco_servico_text.insert("1.0", produto[6])
@@ -908,6 +913,11 @@ class ProdutosModule(BaseModule):
                 self.descricao_var.set(produto[5] or "")  # descricao
                 try:
                     if hasattr(self, 'esboco_servico_text'):
+                        # Garantir que o campo esteja habilitado para receber o texto
+                        try:
+                            self.esboco_servico_text.config(state='normal')
+                        except Exception:
+                            pass
                         self.esboco_servico_text.delete("1.0", tk.END)
                         if produto[6]:
                             self.esboco_servico_text.insert("1.0", produto[6])
