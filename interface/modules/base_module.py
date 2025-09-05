@@ -22,8 +22,8 @@ class BaseModule:
         # Configurar UI específica do módulo
         self.setup_ui()
         
-        # Aplicar modo somente leitura automaticamente baseado nas permissões
-        self._apply_permissions_automatically()
+        # Não aplicar modo readonly automaticamente - será aplicado quando necessário
+        # self._apply_permissions_automatically()
     
     def _apply_permissions_automatically(self):
         """Aplica automaticamente as permissões baseado no nível de acesso do usuário"""
@@ -98,6 +98,74 @@ class BaseModule:
         else:
             print(f"✏️ Removendo modo somente leitura para {self.__class__.__name__}")
             # Implementar lógica para reativar campos se necessário
+            
+    def apply_readonly_for_visualization(self):
+        """Aplica modo readonly apenas para visualização - mantém campos visíveis mas não editáveis"""
+        if not self.can_edit():
+            print(f"🔍 Aplicando modo visualização para {self.__class__.__name__}")
+            self._apply_visualization_readonly()
+            
+    def _apply_visualization_readonly(self):
+        """Aplica readonly apenas em botões de ação, mantendo campos visíveis"""
+        try:
+            # Desabilitar apenas botões de ação (salvar, excluir, adicionar, etc.)
+            for widget in self.frame.winfo_children():
+                self._disable_action_buttons_recursive(widget)
+                
+        except Exception as e:
+            print(f"⚠️ Erro ao aplicar modo visualização: {e}")
+            
+    def _disable_action_buttons_recursive(self, widget):
+        """Desabilita apenas botões de ação, mantendo campos de visualização"""
+        try:
+            if isinstance(widget, tk.Button):
+                button_text = widget.cget('text').lower()
+                # Lista de botões que devem ser desabilitados (ações de modificação)
+                action_buttons = ['salvar', 'excluir', 'adicionar', 'remover', 'inserir', 'deletar', 'criar', 'novo', 'editar', 'alterar', 'modificar']
+                if any(action in button_text for action in action_buttons):
+                    widget.config(state='disabled')
+                    print(f"   🔒 Botão desabilitado: {button_text}")
+                    
+            elif isinstance(widget, (tk.Entry, tk.Text)):
+                # Para campos de texto, aplicar readonly mas manter visível
+                try:
+                    if isinstance(widget, tk.Entry):
+                        widget.config(state='readonly', readonlybackground='#f0f0f0')
+                    else:  # tk.Text
+                        widget.config(state='disabled', bg='#f0f0f0')
+                except:
+                    pass
+                    
+            elif isinstance(widget, ttk.Entry):
+                # Para ttk.Entry
+                try:
+                    widget.config(state='readonly')
+                except:
+                    pass
+                    
+            elif isinstance(widget, ttk.Combobox):
+                # Para combobox, desabilitar mas manter visível
+                try:
+                    widget.config(state='disabled')
+                except:
+                    pass
+                    
+            elif isinstance(widget, (tk.Checkbutton, tk.Radiobutton)):
+                # Para checkboxes e radiobuttons
+                try:
+                    widget.config(state='disabled')
+                except:
+                    pass
+                    
+            # Recursão para widgets filhos
+            try:
+                for child in widget.winfo_children():
+                    self._disable_action_buttons_recursive(child)
+            except:
+                pass
+                
+        except Exception as e:
+            pass  # Ignorar erros em widgets específicos
     
     def _apply_read_only_state(self):
         """Aplica o estado de somente leitura aos widgets"""
