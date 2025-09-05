@@ -794,16 +794,28 @@ class LocacoesModule(BaseModule):
 				pass
 
 	def editar(self):
-		if not self.can_edit('locacoes'):
-			self.show_warning("Você não tem permissão para editar locações.")
-			return
-			
+		"""Editar/Visualizar locação selecionada baseado nas permissões"""
 		sel = self.tree.selection()
 		if not sel:
-			self.show_warning("Selecione uma locação para editar.")
+			self.show_warning("Selecione uma locação para editar/visualizar.")
 			return
+			
 		cotacao_id = self.tree.item(sel[0])['tags'][0]
-		self._carregar_cotacao(cotacao_id)
+		
+		if self.can_edit('locacoes'):
+			# Usuário pode editar - carregar normalmente
+			self._carregar_cotacao(cotacao_id)
+		else:
+			# Usuário só pode visualizar - carregar dados e aplicar readonly
+			self._carregar_cotacao(cotacao_id)
+			# Aplicar modo readonly após carregamento
+			self.frame.after(100, lambda: self._aplicar_readonly_visualizacao())
+			self.show_info("Visualizando locação em modo consulta. Os dados não podem ser editados.")
+			
+	def _aplicar_readonly_visualizacao(self):
+		"""Aplica readonly após os dados serem carregados"""
+		if not self.can_edit('locacoes'):
+			self.apply_readonly_for_visualization()
 
 	def _carregar_cotacao(self, cotacao_id):
 		try:

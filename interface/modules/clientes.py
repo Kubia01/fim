@@ -1158,14 +1158,10 @@ Contatos Cadastrados: {total_contatos}"""
             conn.close()
             
     def editar_cliente(self):
-        """Editar cliente selecionado"""
-        if not self.can_edit('clientes'):
-            self.show_warning("Você não tem permissão para editar clientes.")
-            return
-            
+        """Editar/Visualizar cliente selecionado baseado nas permissões"""
         selected = self.clientes_tree.selection()
         if not selected:
-            self.show_warning("Selecione um cliente para editar.")
+            self.show_warning("Selecione um cliente para editar/visualizar.")
             return
             
         # Obter ID do cliente
@@ -1174,10 +1170,13 @@ Contatos Cadastrados: {total_contatos}"""
             return
             
         cliente_id = tags[0]
-        self.carregar_cliente_para_edicao(cliente_id)
         
-        # Garantir foco no formulário
-        # (Layout único: permanece na mesma tela)
+        if self.can_edit('clientes'):
+            # Usuário pode editar - carregar normalmente
+            self.carregar_cliente_para_edicao(cliente_id)
+        else:
+            # Usuário só pode visualizar - usar função de visualização
+            self.visualizar_cliente(cliente_id)
         
     def on_cliente_double_click(self, event):
         """Duplo clique na treeview - visualizar ou editar cliente baseado nas permissões"""

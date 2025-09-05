@@ -797,21 +797,23 @@ class ProdutosModule(BaseModule):
             self.visualizar_produto(produto_id)
 
     def editar_produto(self):
-        """Editar produto selecionado (qualquer aba)."""
-        if not self.can_edit('produtos'):
-            self.show_warning("Você não tem permissão para editar produtos.")
-            return
-            
+        """Editar/Visualizar produto selecionado baseado nas permissões"""
         produto_id, _tree = self._get_selected_produto_id()
         if not produto_id:
-            self.show_warning("Selecione um produto/serviço/kit para editar.")
+            self.show_warning("Selecione um produto/serviço/kit para editar/visualizar.")
             return
-        self.carregar_produto_para_edicao(produto_id)
-        # Ir imediatamente para a aba de criação/edição
-        try:
-            self.notebook.select(0)
-        except Exception:
-            pass
+            
+        if self.can_edit('produtos'):
+            # Usuário pode editar - carregar normalmente
+            self.carregar_produto_para_edicao(produto_id)
+            # Ir imediatamente para a aba de criação/edição
+            try:
+                self.notebook.select(0)
+            except Exception:
+                pass
+        else:
+            # Usuário só pode visualizar - usar função de visualização
+            self.visualizar_produto(produto_id)
 
     def excluir_produto(self):
         """Excluir produto/serviço/kit selecionado."""
