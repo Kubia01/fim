@@ -187,27 +187,17 @@ class BaseModule:
                     widget.unbind('<Space>')
                     
             elif isinstance(widget, ttk.Treeview):
-                # Desabilitar COMPLETAMENTE a Treeview para edição
-                widget.config(selectmode='none')
-                widget.unbind('<Button-1>')
-                widget.unbind('<Double-Button-1>')
-                widget.unbind('<B1-Motion>')
-                widget.unbind('<Shift-Button-1>')
-                widget.unbind('<Control-Button-1>')
+                # Modo consulta: permitir seleção/visualização, bloquear edição e remoção
+                widget.config(selectmode='browse')
+                # Bloquear ações de edição/inserção/remoção
                 widget.unbind('<Return>')
                 widget.unbind('<F2>')
                 widget.unbind('<Delete>')
                 widget.unbind('<Key>')
                 
             elif isinstance(widget, tk.Listbox):
-                widget.config(state='disabled', selectmode='none')
-                widget.unbind('<Button-1>')
-                widget.unbind('<Double-Button-1>')
-                widget.unbind('<B1-Motion>')
-                widget.unbind('<Shift-Button-1>')
-                widget.unbind('<Control-Button-1>')
-                widget.unbind('<Key>')
-                widget.unbind('<Delete>')
+                # Permitir rolagem/seleção para consulta, sem edição
+                widget.config(state='disabled')
                 
             elif isinstance(widget, (tk.Scale, ttk.Scale)):
                 widget.config(state='disabled')
