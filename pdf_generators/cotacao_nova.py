@@ -1141,6 +1141,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.set_text_color(0, 0, 0)
                 pdf.set_font("Arial", '', 11)
                 item_counter = 1
+                valor_total_pdf_soma = 0
                 
                 for item in itens_cotacao:
                     (item_id, item_tipo, item_nome, quantidade, descricao, 
@@ -1162,7 +1163,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     if not descricao or str(descricao).strip() == '' or str(descricao).lower() in ['none', 'null']:
                         descricao = item_nome if item_nome else "Descrição não informada"
                         print(f"  - Descrição corrigida para: '{descricao}'")
-                    
+
                     # TRATAMENTO ESPECIAL PARA KITS E SERVIÇOS (como modelo antigo)
                     descricao_final = descricao
                     
@@ -1235,9 +1236,9 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                             pass
                     
                     else:  # Produto
-                        descricao_final = f"{prefixo}{item_nome}"
-                        # Para itens de Locação, exibir ICMS na descrição, quando houver
                         if (tipo_operacao or "").lower().startswith('loca'):
+                            # Locação: Exibir nome do equipamento e ICMS como solicitado
+                            descricao_final = f"Nome do Equipamento\n{item_nome}"
                             try:
                                 c2 = conn.cursor()
                                 c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
@@ -1246,6 +1247,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                                     descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
                             except Exception:
                                 pass
+                        else:
+                            descricao_final = f"{prefixo}{item_nome}"
                     
                     # Calcular altura baseada no número de linhas
                     num_linhas = descricao_final.count('\n') + 1
@@ -1277,6 +1280,12 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
 
                     # Valor Total
                     pdf.cell(col_widths[4], altura_real, clean_text(f"R$ {valor_total_item:.2f}"), 1, 1, 'R')
+
+                    # Acumular total para o rodapé
+                    try:
+                        valor_total_pdf_soma += float(valor_total_item or 0)
+                    except Exception:
+                        pass
                     
                     item_counter = 1
 
@@ -1286,7 +1295,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.set_fill_color(200, 200, 200)
                 pdf.set_text_color(0, 0, 0)
                 pdf.cell(sum(col_widths[0:4]), 10, clean_text("VALOR TOTAL DA PROPOSTA:"), 1, 0, 'R', 1)
-                pdf.cell(col_widths[4], 10, clean_text(f"R$ {valor_total:.2f}"), 1, 1, 'R', 1)
+                # Usar soma dos itens (inclui ICMS) para garantir total correto na tabela
+                pdf.cell(col_widths[4], 10, clean_text(f"R$ {valor_total_pdf_soma:.2f}"), 1, 1, 'R', 1)
                 pdf.ln(10)
 
             # Condições comerciais (já existia: manter)
