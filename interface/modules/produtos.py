@@ -1142,7 +1142,7 @@ class ProdutosModule(BaseModule):
         
     def visualizar_produto(self, produto_id):
         """Visualizar dados do produto em modo readonly"""
-        # Carregar os dados do produto
+        # Carregar os dados do produto primeiro
         self.carregar_produto_para_edicao(produto_id)
         
         # Ir para a aba de criação/edição para mostrar os dados
@@ -1151,6 +1151,9 @@ class ProdutosModule(BaseModule):
         except Exception:
             pass
             
+        # Aplicar modo readonly apenas para visualização (não bloqueia campos, apenas botões)
+        self.apply_readonly_for_visualization()
+        
         # Mostrar mensagem informativa
         self.show_info("Visualizando produto em modo consulta. Os dados não podem ser editados.")
         

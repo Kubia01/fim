@@ -1464,8 +1464,11 @@ Contatos Cadastrados: {total_contatos}"""
             
     def visualizar_cliente(self, cliente_id):
         """Visualizar dados do cliente em modo readonly"""
-        # Carregar os dados do cliente
+        # Carregar os dados do cliente primeiro
         self.carregar_cliente_para_edicao(cliente_id)
+        
+        # Aplicar modo readonly apenas para visualização (não bloqueia campos, apenas botões)
+        self.apply_readonly_for_visualization()
         
         # Mostrar mensagem informativa
         self.show_info("Visualizando cliente em modo consulta. Os dados não podem ser editados.")
