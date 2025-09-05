@@ -146,6 +146,9 @@ class ClientesModule(BaseModule):
 
         self.clientes_tree.pack(side="left", fill="both", expand=True)
         lista_scrollbar.pack(side="right", fill="y")
+        
+        # Adicionar evento de duplo clique para visualização/edição
+        self.clientes_tree.bind("<Double-1>", self.on_cliente_double_click)
 
         # Botões da lista (fixos ao rodapé)
         # (Já reservado no topo deste bloco)
@@ -1174,7 +1177,27 @@ Contatos Cadastrados: {total_contatos}"""
         self.carregar_cliente_para_edicao(cliente_id)
         
         # Garantir foco no formulário
-        # (Layout único: permanece na mesma tela) 
+        # (Layout único: permanece na mesma tela)
+        
+    def on_cliente_double_click(self, event):
+        """Duplo clique na treeview - visualizar ou editar cliente baseado nas permissões"""
+        selected = self.clientes_tree.selection()
+        if not selected:
+            return
+            
+        # Obter ID do cliente
+        tags = self.clientes_tree.item(selected[0])['tags']
+        if not tags:
+            return
+            
+        cliente_id = tags[0]
+        
+        if self.can_edit('clientes'):
+            # Usuário pode editar - carregar para edição
+            self.carregar_cliente_para_edicao(cliente_id)
+        else:
+            # Usuário só pode visualizar - carregar dados em modo readonly
+            self.visualizar_cliente(cliente_id)
     
     def carregar_cliente_para_edicao(self, cliente_id):
         """Carregar dados do cliente para edição"""
@@ -1438,3 +1461,11 @@ Contatos Cadastrados: {total_contatos}"""
             self.cep_var.set(format_cep(cep))
         except Exception as e:
             self.show_error(f"Erro ao buscar CEP: {e}")
+            
+    def visualizar_cliente(self, cliente_id):
+        """Visualizar dados do cliente em modo readonly"""
+        # Carregar os dados do cliente
+        self.carregar_cliente_para_edicao(cliente_id)
+        
+        # Mostrar mensagem informativa
+        self.show_info("Visualizando cliente em modo consulta. Os dados não podem ser editados.")

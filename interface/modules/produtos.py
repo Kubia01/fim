@@ -364,6 +364,9 @@ class ProdutosModule(BaseModule):
             tree.pack(side="left", fill="both", expand=True)
             scrollbar.pack(side="right", fill="y")
             
+            # Adicionar evento de duplo clique para visualização
+            tree.bind("<Double-1>", self.on_produto_double_click)
+            
             self.trees_por_tipo["Serviços" if tipo=="Kit" else tipo] = tree
         
         # Botões
@@ -775,6 +778,24 @@ class ProdutosModule(BaseModule):
         finally:
             conn.close()
             
+    def on_produto_double_click(self, event):
+        """Duplo clique na treeview - visualizar ou editar produto baseado nas permissões"""
+        produto_id, _tree = self._get_selected_produto_id()
+        if not produto_id:
+            return
+            
+        if self.can_edit('produtos'):
+            # Usuário pode editar - carregar para edição
+            self.carregar_produto_para_edicao(produto_id)
+            # Ir para a aba de criação/edição
+            try:
+                self.notebook.select(0)
+            except Exception:
+                pass
+        else:
+            # Usuário só pode visualizar - carregar dados em modo readonly
+            self.visualizar_produto(produto_id)
+
     def editar_produto(self):
         """Editar produto selecionado (qualquer aba)."""
         if not self.can_edit('produtos'):
@@ -1118,4 +1139,18 @@ class ProdutosModule(BaseModule):
             except Exception:
                 continue
         return None, None
+        
+    def visualizar_produto(self, produto_id):
+        """Visualizar dados do produto em modo readonly"""
+        # Carregar os dados do produto
+        self.carregar_produto_para_edicao(produto_id)
+        
+        # Ir para a aba de criação/edição para mostrar os dados
+        try:
+            self.notebook.select(0)
+        except Exception:
+            pass
+            
+        # Mostrar mensagem informativa
+        self.show_info("Visualizando produto em modo consulta. Os dados não podem ser editados.")
         
