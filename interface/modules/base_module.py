@@ -121,10 +121,15 @@ class BaseModule:
             if isinstance(widget, tk.Button):
                 button_text = widget.cget('text').lower()
                 # Lista de botões que devem ser desabilitados (ações de modificação)
-                action_buttons = ['salvar', 'excluir', 'adicionar', 'remover', 'inserir', 'deletar', 'criar', 'novo', 'editar', 'alterar', 'modificar']
+                # NOTA: Removemos 'editar' da lista para permitir visualização
+                action_buttons = ['salvar', 'excluir', 'adicionar', 'remover', 'inserir', 'deletar', 'criar', 'novo', 'alterar', 'modificar']
                 if any(action in button_text for action in action_buttons):
                     widget.config(state='disabled')
                     print(f"   🔒 Botão desabilitado: {button_text}")
+                elif 'editar' in button_text:
+                    # Manter botão Editar habilitado para visualização
+                    widget.config(state='normal')
+                    print(f"   👁️ Botão Editar mantido habilitado para visualização: {button_text}")
                     
             elif isinstance(widget, (tk.Entry, tk.Text)):
                 # Para campos de texto, aplicar readonly mas manter visível
