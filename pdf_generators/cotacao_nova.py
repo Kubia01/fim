@@ -1163,17 +1163,16 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     print(f"  - Valor Total: {valor_total_item}")
                     print(f"  - Produto ID: {produto_id}")
                     
-                    # Pré-carregar ICMS para itens de locação
+                    # Carregar ICMS para qualquer tipo de item (Compra ou Locação)
                     icms_value = 0
-                    if (tipo_operacao or "").lower().startswith('loca'):
-                        try:
-                            c2 = conn.cursor()
-                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-                            icms_row = c2.fetchone()
-                            if icms_row and (icms_row[0] or 0) > 0:
-                                icms_value = float(icms_row[0] or 0)
-                        except Exception:
-                            icms_value = 0
+                    try:
+                        c2 = conn.cursor()
+                        c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                        icms_row = c2.fetchone()
+                        if icms_row and (icms_row[0] or 0) > 0:
+                            icms_value = float(icms_row[0] or 0)
+                    except Exception:
+                        icms_value = 0
 
                     # GARANTIR que descrição não seja vazia ou None
                     if not descricao or str(descricao).strip() == '' or str(descricao).lower() in ['none', 'null']:
