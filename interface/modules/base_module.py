@@ -257,7 +257,7 @@ class BaseModule:
                 # Desabilitar TODOS os botões exceto os de consulta/navegação
                 button_text = widget.cget('text').lower()
                 # Lista muito restritiva de botões permitidos
-                allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último']
+                allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último', 'editar']
                 if not any(allowed in button_text for allowed in allowed_buttons):
                     widget.config(state='disabled')
                     # Bloquear completamente o botão

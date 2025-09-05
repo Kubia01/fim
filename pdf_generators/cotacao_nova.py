@@ -645,8 +645,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
 
             if imagem_pagina4:
                 # Padronizar tamanho para todas as imagens
-                # Largura desejada mantida (70*1.3); altura dobrada (100% de aumento)
-                w, h = 70 * 1.3, 24 * 1.3 * 2.8
+                # Largura desejada mantida (70*1.3); altura ajustada para 3.5
+                w, h = 70 * 1.3, 24 * 1.3 * 3.5
                 x = (210 - w) / 2
                 y = pdf.get_y() + 10
                 if y + h > 270:
@@ -832,8 +832,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             except Exception:
                 pass
             if imagem_p7:
-                # Padronizar tamanho para todas as imagens (altura dobrada - 100% de aumento)
-                w, h = 70 * 1.3, 24 * 1.3 * 2.8
+                # Padronizar tamanho para todas as imagens (altura ajustada para 3.5)
+                w, h = 70 * 1.3, 24 * 1.3 * 3.5
                 x = (210 - w) / 2
                 y = 77
                 pdf.image(imagem_p7, x=x, y=y, w=w, h=h)
