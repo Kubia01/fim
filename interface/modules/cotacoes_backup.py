@@ -1190,7 +1190,7 @@ class CotacoesModule(BaseModule):
 				"",
 				"",
 				"",
-				format_currency(valor_total),
+				format_currency(quantidade * (valor_unitario + mao_obra + deslocamento + estadia + icms_val)),
 				descricao_completa,
 				"Compra",
 				format_currency(icms_val)
@@ -1226,6 +1226,11 @@ class CotacoesModule(BaseModule):
 			self.item_mao_obra_var.set("0.00")
 			self.item_deslocamento_var.set("0.00")
 			self.item_estadia_var.set("0.00")
+			# Limpar ICMS após adicionar item
+			try:
+				self.item_icms_var.set("0.00")
+			except Exception:
+				pass
 		
 		# Código de limpeza já implementado acima
 		
@@ -1292,11 +1297,11 @@ class CotacoesModule(BaseModule):
 				estadia = clean_number(entries[6].get() or '0')
 				meses = int(entries[7].get() or 0) if str(entries[7].get() or '').strip().isdigit() else 0
 				icms_val = clean_number(entries[13].get() or '0')
-				# Recalcular total (para locação usa meses; para compra soma custos)
+				# Recalcular total (para locação usa meses; para compra soma custos incluindo ICMS)
 				if (entries[12].get() or '').lower().startswith('loca'):
 					total = (valor_unit or 0) * (meses or 0) * (qtd or 0)
 				else:
-					total = (qtd or 0) * ((valor_unit or 0) + (mao_obra or 0) + (desloc or 0) + (estadia or 0))
+					total = (qtd or 0) * ((valor_unit or 0) + (mao_obra or 0) + (desloc or 0) + (estadia or 0) + (icms_val or 0))
 				# Atualizar vetor
 				vals[0] = entries[0].get().strip() or 'Produto'
 				vals[1] = entries[1].get().strip()
@@ -1449,6 +1454,19 @@ class CotacoesModule(BaseModule):
 			self.itens_tree.delete(item)
 			
 		self.atualizar_total()
+		# Limpar campos de item (compra) inclusive ICMS
+		try:
+			self.item_tipo_var.set("")
+			self.item_nome_var.set("")
+			self.item_desc_var.set("")
+			self.item_qtd_var.set("1")
+			self.item_valor_var.set("0.00")
+			self.item_mao_obra_var.set("0.00")
+			self.item_deslocamento_var.set("0.00")
+			self.item_estadia_var.set("0.00")
+			self.item_icms_var.set("0.00")
+		except Exception:
+			pass
 		
 		# Gerar número sequencial automático
 		numero = self.gerar_numero_sequencial()
