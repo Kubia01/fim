@@ -101,7 +101,8 @@ class RelatorioPDF(FPDF):
         # Adicionar logo apenas na primeira página
         if self.page_no() == 1:
             try:
-                logo_path = "logo.jpg"
+                # Preferir logo oficial em assets
+                logo_path = "assets/logos/world_comp_brasil.jpg"
                 if os.path.exists(logo_path):
                     # Adicionar logo centralizado no topo
                     with Image.open(logo_path) as img:
@@ -278,7 +279,7 @@ class RelatorioPDF(FPDF):
             self.add_page()
             
             # Verificar se existe logo da empresa
-            logo_path = "logo.jpg"
+            logo_path = "assets/logos/world_comp_brasil.jpg"
             if os.path.exists(logo_path):
                 # Adicionar logo centralizado no topo
                 with Image.open(logo_path) as img:

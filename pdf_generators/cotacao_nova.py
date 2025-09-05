@@ -683,14 +683,14 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_fill_color(50, 100, 150)
             pdf.set_text_color(255, 255, 255)
             pdf.set_font("Arial", 'B', 11)
-            # Larguras finais (sem conflitos) para leitura clara (total = 190mm)
-            # Nome 78, Qtd 12, Valor Mensal 35, Período (meses) 30, ICMS 35
-            col_w = [78, 12, 35, 30, 35]
-            pdf.cell(col_w[0], 8, clean_text("Nome do Equipamento"), 1, 0, 'L', 1)
+            # Larguras finais para leitura clara (total = 190mm)
+            # Nome 78, Qtd 12, Valor Mensal 30, Período (meses) 35, ICMS 35
+            col_w = [78, 12, 30, 35, 35]
+            pdf.cell(col_w[0], 8, clean_text("Nome do Equipamento"), 1, 0, 'C', 1)
             pdf.cell(col_w[1], 8, clean_text("Qtd"), 1, 0, 'C', 1)
-            pdf.cell(col_w[2], 8, clean_text("Valor Mensal"), 1, 0, 'R', 1)
+            pdf.cell(col_w[2], 8, clean_text("Valor Mensal"), 1, 0, 'C', 1)
             pdf.cell(col_w[3], 8, clean_text("Período (meses)"), 1, 0, 'C', 1)
-            pdf.cell(col_w[4], 8, clean_text("ICMS"), 1, 1, 'R', 1)
+            pdf.cell(col_w[4], 8, clean_text("ICMS"), 1, 1, 'C', 1)
 
             pdf.set_text_color(0, 0, 0)
             pdf.set_font("Arial", '', 11)
