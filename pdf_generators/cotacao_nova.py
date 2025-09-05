@@ -1236,6 +1236,16 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     
                     else:  # Produto
                         descricao_final = f"{prefixo}{item_nome}"
+                        # Para itens de Locação, exibir ICMS na descrição, quando houver
+                        if (tipo_operacao or "").lower().startswith('loca'):
+                            try:
+                                c2 = conn.cursor()
+                                c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                                icms_row = c2.fetchone()
+                                if icms_row and (icms_row[0] or 0) > 0:
+                                    descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
+                            except Exception:
+                                pass
                     
                     # Calcular altura baseada no número de linhas
                     num_linhas = descricao_final.count('\n') + 1

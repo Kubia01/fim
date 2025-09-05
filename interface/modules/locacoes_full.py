@@ -356,7 +356,8 @@ class LocacoesModule(BaseModule):
 			self.show_error("Valores numéricos inválidos para item.")
 			return
 		meses = self._calculate_months_between(inicio_iso, fim_iso)
-		total = (valor_unit or 0) * (meses or 0) * quantidade
+		# Calcular total incluindo ICMS quando filial = 2
+		total = ((valor_unit or 0) * (meses or 0) * quantidade) + (icms_val or 0)
 		# Obter ICMS baseado na filial
 		icms_val = 0
 		try:
@@ -956,8 +957,14 @@ class LocacoesModule(BaseModule):
 				fim = entries[5].get().strip()
 				descricao = entries[7].get().strip()
 				imagem = entries[8].get().strip()
-				# recalcular total
-				total = (valor_unit or 0) * (meses or 0) * (quantidade or 0)
+				# recalcular total incluindo ICMS quando filial = 2
+				try:
+					filial_str = self.filial_var.get()
+					filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
+					icms_edit = clean_number(entries.get(9, tk.StringVar(value='0')).get() if entries.get(9) else '0') if filial_id == 2 else 0
+				except Exception:
+					icms_edit = 0
+				total = ((valor_unit or 0) * (meses or 0) * (quantidade or 0)) + (icms_edit or 0)
 				# formatar
 				vals[0] = nome
 				vals[1] = f"{quantidade:.2f}"
