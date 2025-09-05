@@ -65,9 +65,27 @@ A correção é aplicada globalmente através do `BaseModule`, afetando todos os
 
 A correção garante que usuários com permissão "Consultar" não conseguem mais interagir com as listas suspensas, mantendo a interface consistente com suas permissões de acesso. A solução é robusta e cobre todos os cenários possíveis de criação e uso de comboboxes no sistema.
 
+## Correções Adicionais Aplicadas
+
+### 3. Reativação do Sistema de Permissões Automático
+
+#### `main_window.py` (linhas 153-162)
+- **Problema**: Sistema de aplicação automática de permissões estava comentado
+- **Solução**: Reativado para aplicar `set_read_only(True)` automaticamente para usuários sem permissão de edição
+
+#### `base_module.py` (linha 26)
+- **Problema**: Aplicação automática de permissões estava desabilitada
+- **Solução**: Reativado `_apply_permissions_automatically()` para aplicar permissões automaticamente
+
+### 4. Melhoria no Método de Proteção Principal
+
+#### `main_window.py` (linhas 233-263)
+- **Problema**: `_disable_all_widgets_completely` não aplicava bloqueio completo para comboboxes
+- **Solução**: Implementado o mesmo bloqueio robusto de eventos aplicado no `base_module.py`
+
 ## Arquivos Modificados
 
 1. `/workspace/interface/modules/base_module.py` - Implementação principal do bloqueio
 2. `/workspace/interface/modules/clientes.py` - Correção de estado do combobox
-3. `/workspace/teste_permissoes_simples.py` - Script de teste (novo)
+3. `/workspace/interface/main_window.py` - Reativação de permissões automáticas e melhoria da proteção
 4. `/workspace/CORRECAO_LISTAS_SUSPENSAS.md` - Documentação (novo)
