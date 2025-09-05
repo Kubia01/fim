@@ -710,9 +710,9 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 h = max(6, y1 - y0)
                 pdf.set_xy(x0 + col_w[0], y0)
                 pdf.cell(col_w[1], h, clean_text(f"{int(qtd_num)}"), 1, 0, 'C')
-                pdf.cell(col_w[2], h, clean_text(f"R$ {vm_num:.2f}"), 1, 0, 'R')
+                pdf.cell(col_w[2], h, clean_text(f"R$ {vm_num:.2f}"), 1, 0, 'C')
                 pdf.cell(col_w[3], h, clean_text(str(meses_num)), 1, 0, 'C')
-                pdf.cell(col_w[4], h, clean_text(f"R$ {icms_num:.2f}"), 1, 1, 'R')
+                pdf.cell(col_w[4], h, clean_text(f"R$ {icms_num:.2f}"), 1, 1, 'C')
 
             pdf.ln(6)
             pdf.set_x(10)
@@ -726,7 +726,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 except Exception:
                     return f"R$ {v:.2f}"
             pdf.cell(sum(col_w[:-1]), 10, clean_text("TOTAL GERAL:"), 1, 0, 'R', 1)
-            pdf.cell(col_w[-1], 10, clean_text(brl(total_geral)), 1, 1, 'R', 1)
+            pdf.cell(col_w[-1], 10, clean_text(brl(total_geral)), 1, 1, 'C', 1)
 
             # Condições comerciais imediatamente abaixo da tabela (Página 5)
             pdf.ln(6)
