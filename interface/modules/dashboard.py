@@ -167,9 +167,13 @@ class DashboardModule(BaseModule):
         c = conn.cursor()
         
         try:
-            # Carregar estatísticas baseadas no perfil do usuário
-            if self.has_role('admin'):
-                # Admin vê dados gerais de todos
+            # Verificar se usuário pode ver dados gerais (admin ou com permissão de consulta no dashboard)
+            can_view_general_data = (self.has_role('admin') or 
+                                   (hasattr(self.main_window, 'has_access') and 
+                                    self.main_window.has_access('dashboard')))
+            
+            if can_view_general_data:
+                # Admin ou usuários com permissão de consulta veem dados gerais
                 # Clientes
                 c.execute("SELECT COUNT(*) FROM clientes")
                 clients_count = c.fetchone()[0]
@@ -190,7 +194,7 @@ class DashboardModule(BaseModule):
                 reports_count = c.fetchone()[0]
                 self.reports_card.value_label.config(text=str(reports_count))
             else:
-                # Usuários veem apenas seus dados
+                # Usuários sem permissão veem apenas seus dados
                 # Cotações do usuário
                 c.execute("SELECT COUNT(*) FROM cotacoes WHERE responsavel_id = ?", (self.user_id,))
                 quotes_count = c.fetchone()[0]
@@ -228,8 +232,13 @@ class DashboardModule(BaseModule):
         for item in self.quotes_tree.get_children():
             self.quotes_tree.delete(item)
             
+        # Verificar se usuário pode ver dados gerais (admin ou com permissão de consulta)
+        can_view_general_data = (self.has_role('admin') or 
+                               (hasattr(self.main_window, 'has_access') and 
+                                self.main_window.has_access('dashboard')))
+            
         # Buscar cotações recentes baseadas no perfil
-        if self.has_role('admin'):
+        if can_view_general_data:
             cursor.execute("""
                 SELECT c.numero_proposta, cl.nome, c.data_criacao, c.valor_total, c.status
                 FROM cotacoes c
@@ -263,8 +272,13 @@ class DashboardModule(BaseModule):
         for item in self.reports_tree.get_children():
             self.reports_tree.delete(item)
             
+        # Verificar se usuário pode ver dados gerais (admin ou com permissão de consulta)
+        can_view_general_data = (self.has_role('admin') or 
+                               (hasattr(self.main_window, 'has_access') and 
+                                self.main_window.has_access('dashboard')))
+            
         # Buscar relatórios recentes baseadas no perfil
-        if self.has_role('admin'):
+        if can_view_general_data:
             cursor.execute("""
                 SELECT r.numero_relatorio, cl.nome, r.data_criacao, u.nome_completo, r.tipo_servico
                 FROM relatorios_tecnicos r
