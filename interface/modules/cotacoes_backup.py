@@ -1414,6 +1414,11 @@ class CotacoesModule(BaseModule):
 		# Limpar campos
 		self.numero_var.set("")
 		self.cliente_var.set("")
+		self.contato_cliente_var.set("")
+		try:
+			self.contato_cliente_combo['values'] = []
+		except Exception:
+			pass
 		self.modelo_var.set("")
 		self.serie_var.set("")
 		self.status_var.set("Em Aberto")
