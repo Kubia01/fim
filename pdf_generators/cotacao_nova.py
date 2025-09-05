@@ -644,8 +644,9 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 imagem_pagina4 = locacao_imagem_path_db
 
             if imagem_pagina4:
-                # Padronizar tamanho para todas as imagens (30% maior que o padrão antigo 70x24)
-                w, h = 70 * 1.3, 24 * 1.3
+                # Padronizar tamanho para todas as imagens
+                # Largura desejada mantida (70*1.3); altura aumentada em 30% adicional
+                w, h = 70 * 1.3, 24 * 1.3 * 1.3
                 x = (210 - w) / 2
                 y = pdf.get_y() + 10
                 if y + h > 270:
@@ -831,8 +832,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             except Exception:
                 pass
             if imagem_p7:
-                # Padronizar tamanho para todas as imagens (30% maior que o padrão antigo 70x24)
-                w, h = 70 * 1.3, 24 * 1.3
+                # Padronizar tamanho para todas as imagens (altura +30%)
+                w, h = 70 * 1.3, 24 * 1.3 * 1.3
                 x = (210 - w) / 2
                 y = 77
                 pdf.image(imagem_p7, x=x, y=y, w=w, h=h)
