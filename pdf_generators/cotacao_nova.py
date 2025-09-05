@@ -1159,6 +1159,18 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     print(f"  - Valor Total: {valor_total_item}")
                     print(f"  - Produto ID: {produto_id}")
                     
+                    # Pré-carregar ICMS para itens de locação
+                    icms_value = 0
+                    if (tipo_operacao or "").lower().startswith('loca'):
+                        try:
+                            c2 = conn.cursor()
+                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
+                            icms_row = c2.fetchone()
+                            if icms_row and (icms_row[0] or 0) > 0:
+                                icms_value = float(icms_row[0] or 0)
+                        except Exception:
+                            icms_value = 0
+
                     # GARANTIR que descrição não seja vazia ou None
                     if not descricao or str(descricao).strip() == '' or str(descricao).lower() in ['none', 'null']:
                         descricao = item_nome if item_nome else "Descrição não informada"
@@ -1188,15 +1200,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                                 descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
                                 descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-                        try:
-                            # Buscar ICMS do item
-                            c2 = conn.cursor()
-                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-                            icms_row = c2.fetchone()
-                            if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-                        except Exception:
-                            pass
+                        if icms_value > 0:
+                            descricao_final += f"\nICMS: R$ {icms_value:.2f}"
                     
                     elif item_tipo == "Serviços":
                         descricao_final = f"{prefixo}Serviços: {item_nome}"
@@ -1207,14 +1212,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                                 descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
                                 descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-                        try:
-                            c2 = conn.cursor()
-                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-                            icms_row = c2.fetchone()
-                            if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-                        except Exception:
-                            pass
+                        if icms_value > 0:
+                            descricao_final += f"\nICMS: R$ {icms_value:.2f}"
                     
                     elif item_tipo == "Kit" and not produto_id:
                         # Kits sem produto_id válido: tratar como Serviços
@@ -1226,27 +1225,15 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                                 descricao_final += f"\nDeslocamento: R$ {deslocamento:.2f}"
                             if mao_obra:
                                 descricao_final += f"\nMão de Obra: R$ {mao_obra:.2f}"
-                        try:
-                            c2 = conn.cursor()
-                            c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-                            icms_row = c2.fetchone()
-                            if icms_row and (icms_row[0] or 0) > 0:
-                                descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-                        except Exception:
-                            pass
+                        if icms_value > 0:
+                            descricao_final += f"\nICMS: R$ {icms_value:.2f}"
                     
                     else:  # Produto
                         if (tipo_operacao or "").lower().startswith('loca'):
                             # Locação: Exibir nome do equipamento e ICMS como solicitado
                             descricao_final = f"Nome do Equipamento\n{item_nome}"
-                            try:
-                                c2 = conn.cursor()
-                                c2.execute("SELECT icms FROM itens_cotacao WHERE id = ?", (item_id,))
-                                icms_row = c2.fetchone()
-                                if icms_row and (icms_row[0] or 0) > 0:
-                                    descricao_final += f"\nICMS: R$ {icms_row[0]:.2f}"
-                            except Exception:
-                                pass
+                            if icms_value > 0:
+                                descricao_final += f"\nICMS: R$ {icms_value:.2f}"
                         else:
                             descricao_final = f"{prefixo}{item_nome}"
                     
@@ -1278,16 +1265,19 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     # Valor Unitário
                     pdf.cell(col_widths[3], altura_real, clean_text(f"R$ {valor_unitario:.2f}"), 1, 0, 'R')
 
-                    # Valor Total
-                    pdf.cell(col_widths[4], altura_real, clean_text(f"R$ {valor_total_item:.2f}"), 1, 1, 'R')
+                    # Valor Total (somar ICMS em itens de locação)
+                    valor_total_display = float(valor_total_item or 0)
+                    if (tipo_operacao or "").lower().startswith('loca'):
+                        valor_total_display += float(icms_value or 0)
+                    pdf.cell(col_widths[4], altura_real, clean_text(f"R$ {valor_total_display:.2f}"), 1, 1, 'R')
 
-                    # Acumular total para o rodapé
+                    # Acumular total para o rodapé (incluindo ICMS quando aplicável)
                     try:
-                        valor_total_pdf_soma += float(valor_total_item or 0)
+                        valor_total_pdf_soma += float(valor_total_display)
                     except Exception:
                         pass
                     
-                    item_counter = 1
+                    item_counter += 1
 
                 # Linha do valor total - alinhada com a tabela
                 pdf.set_x(10)  # Mesma margem esquerda da tabela
