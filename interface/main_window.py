@@ -150,16 +150,16 @@ class MainWindow:
                 mod = __import__(module_path, fromlist=[class_name])
                 cls = getattr(mod, class_name)
                 instance = cls(frame, self.user_id, self.role, self)
-                # Se módulo estiver como somente leitura, tentar aplicar
-                module_key = self._tab_text_to_key(tab_text)
-                if not self.can_edit(module_key) and hasattr(instance, 'set_read_only'):
-                    try:
-                        instance.set_read_only(True)
-                        print(f"🔒 FORÇANDO modo somente leitura para módulo {module_key} (usuário {self.user_id})")
-                        # Aplicar proteção adicional após um breve delay para garantir que a UI esteja pronta
-                        self.root.after(100, lambda: self._force_read_only_protection(instance, module_key))
-                    except Exception as e:
-                        print(f"⚠️ Erro ao aplicar modo somente leitura: {e}")
+                # Não aplicar readonly automaticamente - será aplicado quando necessário
+                # module_key = self._tab_text_to_key(tab_text)
+                # if not self.can_edit(module_key) and hasattr(instance, 'set_read_only'):
+                #     try:
+                #         instance.set_read_only(True)
+                #         print(f"🔒 FORÇANDO modo somente leitura para módulo {module_key} (usuário {self.user_id})")
+                #         # Aplicar proteção adicional após um breve delay para garantir que a UI esteja pronta
+                #         self.root.after(100, lambda: self._force_read_only_protection(instance, module_key))
+                #     except Exception as e:
+                #         print(f"⚠️ Erro ao aplicar modo somente leitura: {e}")
                 return instance
             except Exception as e:
                 messagebox.showerror("Erro ao carregar módulo", f"Falha ao carregar {tab_text}:\n\n{e}")
@@ -242,7 +242,7 @@ class MainWindow:
                         # Desabilitar TODOS os botões exceto os de consulta
                         try:
                             button_text = widget.cget('text').lower()
-                            allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último']
+                            allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último', 'editar']
                             if not any(allowed in button_text for allowed in allowed_buttons):
                                 widget.config(state='disabled')
                         except:
@@ -303,7 +303,7 @@ class MainWindow:
         try:
             if isinstance(widget, (tk.Button, ttk.Button)):
                 button_text = widget.cget('text').lower()
-                allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último']
+                allowed_buttons = ['buscar', 'pesquisar', 'filtrar', 'visualizar', 'ver', 'consultar', 'imprimir', 'exportar', 'pdf', 'voltar', 'anterior', 'próximo', 'primeiro', 'último', 'editar']
                 return any(allowed in button_text for allowed in allowed_buttons)
             return False
         except:
