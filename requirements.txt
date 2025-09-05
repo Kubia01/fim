@@ -1,3 +1,5 @@
-fpdf2
-Pillow
-openpyxl
+fpdf2>=2.7.6
+Pillow>=10.0.0
+openpyxl>=3.1.0
+matplotlib>=3.7.0
+pyinstaller>=5.13.0
