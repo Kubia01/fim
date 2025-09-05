@@ -22,8 +22,8 @@ class BaseModule:
         # Configurar UI específica do módulo
         self.setup_ui()
         
-        # Não aplicar modo readonly automaticamente - será aplicado quando necessário
-        # self._apply_permissions_automatically()
+        # Aplicar modo readonly automaticamente baseado nas permissões
+        self._apply_permissions_automatically()
     
     def _apply_permissions_automatically(self):
         """Aplica automaticamente as permissões baseado no nível de acesso do usuário"""

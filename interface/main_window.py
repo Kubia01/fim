@@ -150,16 +150,16 @@ class MainWindow:
                 mod = __import__(module_path, fromlist=[class_name])
                 cls = getattr(mod, class_name)
                 instance = cls(frame, self.user_id, self.role, self)
-                # Não aplicar readonly automaticamente - será aplicado quando necessário
-                # module_key = self._tab_text_to_key(tab_text)
-                # if not self.can_edit(module_key) and hasattr(instance, 'set_read_only'):
-                #     try:
-                #         instance.set_read_only(True)
-                #         print(f"🔒 FORÇANDO modo somente leitura para módulo {module_key} (usuário {self.user_id})")
-                #         # Aplicar proteção adicional após um breve delay para garantir que a UI esteja pronta
-                #         self.root.after(100, lambda: self._force_read_only_protection(instance, module_key))
-                #     except Exception as e:
-                #         print(f"⚠️ Erro ao aplicar modo somente leitura: {e}")
+                # Aplicar readonly automaticamente baseado nas permissões
+                module_key = self._tab_text_to_key(tab_text)
+                if not self.can_edit(module_key) and hasattr(instance, 'set_read_only'):
+                    try:
+                        instance.set_read_only(True)
+                        print(f"🔒 FORÇANDO modo somente leitura para módulo {module_key} (usuário {self.user_id})")
+                        # Aplicar proteção adicional após um breve delay para garantir que a UI esteja pronta
+                        self.root.after(100, lambda: self._force_read_only_protection(instance, module_key))
+                    except Exception as e:
+                        print(f"⚠️ Erro ao aplicar modo somente leitura: {e}")
                 return instance
             except Exception as e:
                 messagebox.showerror("Erro ao carregar módulo", f"Falha ao carregar {tab_text}:\n\n{e}")
@@ -228,8 +228,39 @@ class MainWindow:
             # Desabilitar TODOS os tipos de widgets
             if hasattr(widget, 'config'):
                 try:
-                    if isinstance(widget, (tk.Entry, tk.Text, tk.Spinbox, ttk.Entry, ttk.Combobox, ttk.Spinbox)):
+                    if isinstance(widget, (tk.Entry, tk.Text, tk.Spinbox, ttk.Entry, ttk.Spinbox)):
                         widget.config(state='disabled')
+                    elif isinstance(widget, ttk.Combobox):
+                        # Bloquear completamente as listas suspensas para usuários com permissão "Consultar"
+                        widget.config(state='disabled')
+                        # Bloquear todos os eventos de interação
+                        widget.unbind('<Key>')
+                        widget.unbind('<Button-1>')
+                        widget.unbind('<ButtonRelease-1>')
+                        widget.unbind('<Double-Button-1>')
+                        widget.unbind('<Return>')
+                        widget.unbind('<Tab>')
+                        widget.unbind('<Down>')
+                        widget.unbind('<Up>')
+                        widget.unbind('<Button-3>')
+                        widget.unbind('<B1-Motion>')
+                        widget.unbind('<FocusIn>')
+                        widget.unbind('<FocusOut>')
+                        # Bloquear eventos de teclado específicos para combobox
+                        widget.bind('<Key>', lambda e: 'break')
+                        widget.bind('<Button-1>', lambda e: 'break')
+                        widget.bind('<ButtonRelease-1>', lambda e: 'break')
+                        widget.bind('<Double-Button-1>', lambda e: 'break')
+                        widget.bind('<Return>', lambda e: 'break')
+                        widget.bind('<Tab>', lambda e: 'break')
+                        widget.bind('<Down>', lambda e: 'break')
+                        widget.bind('<Up>', lambda e: 'break')
+                        widget.bind('<Button-3>', lambda e: 'break')
+                        widget.bind('<B1-Motion>', lambda e: 'break')
+                        widget.bind('<FocusIn>', lambda e: 'break')
+                        widget.bind('<FocusOut>', lambda e: 'break')
+                        # Bloquear evento de seleção
+                        widget.bind('<<ComboboxSelected>>', lambda e: 'break')
                     elif isinstance(widget, (tk.Checkbutton, tk.Radiobutton)):
                         widget.config(state='disabled')
                     elif isinstance(widget, tk.Listbox):
