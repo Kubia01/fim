@@ -356,8 +356,6 @@ class LocacoesModule(BaseModule):
 			self.show_error("Valores numéricos inválidos para item.")
 			return
 		meses = self._calculate_months_between(inicio_iso, fim_iso)
-		# Calcular total incluindo ICMS quando filial = 2
-		total = ((valor_unit or 0) * (meses or 0) * quantidade) + (icms_val or 0)
 		# Obter ICMS baseado na filial
 		icms_val = 0
 		try:
@@ -367,6 +365,8 @@ class LocacoesModule(BaseModule):
 				icms_val = clean_number(icms)
 		except Exception:
 			icms_val = 0
+		# Calcular total incluindo ICMS quando filial = 2
+		total = ((valor_unit or 0) * (meses or 0) * quantidade) + (icms_val or 0)
 			
 		self.itens_tree.insert("", "end", values=(
 			nome,
@@ -605,11 +605,23 @@ class LocacoesModule(BaseModule):
 		self.tipo_frete_var.set("FOB")
 		self.prazo_entrega_var.set("")
 		self.observacoes_text.delete("1.0", tk.END)
+		# Limpar contatos disponíveis
+		try:
+			self.contato_cliente_combo['values'] = []
+		except Exception:
+			pass
 		for iid in self.itens_tree.get_children():
 			self.itens_tree.delete(iid)
 		# limpar qualquer imagem temporária
 		self.item_imagem_var.set("")
 		self.item_icms_var.set("0.00")
+		# Limpar campos de item
+		self.item_nome_var.set("")
+		self.item_desc_var.set("")
+		self.item_qtd_var.set("1")
+		self.item_valor_var.set("0.00")
+		self.item_inicio_var.set("")
+		self.item_fim_var.set("")
 		try:
 			self.numero_var.set(self._gerar_numero_sequencial())
 		except Exception:
