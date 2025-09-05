@@ -155,9 +155,37 @@ class BaseModule:
                     pass
                     
             elif isinstance(widget, ttk.Combobox):
-                # Para combobox, desabilitar mas manter visível
+                # Para combobox, bloquear completamente para usuários com permissão "Consultar"
                 try:
                     widget.config(state='disabled')
+                    # Bloquear todos os eventos de interação
+                    widget.unbind('<Key>')
+                    widget.unbind('<Button-1>')
+                    widget.unbind('<ButtonRelease-1>')
+                    widget.unbind('<Double-Button-1>')
+                    widget.unbind('<Return>')
+                    widget.unbind('<Tab>')
+                    widget.unbind('<Down>')
+                    widget.unbind('<Up>')
+                    widget.unbind('<Button-3>')
+                    widget.unbind('<B1-Motion>')
+                    widget.unbind('<FocusIn>')
+                    widget.unbind('<FocusOut>')
+                    # Bloquear eventos de teclado específicos para combobox
+                    widget.bind('<Key>', lambda e: 'break')
+                    widget.bind('<Button-1>', lambda e: 'break')
+                    widget.bind('<ButtonRelease-1>', lambda e: 'break')
+                    widget.bind('<Double-Button-1>', lambda e: 'break')
+                    widget.bind('<Return>', lambda e: 'break')
+                    widget.bind('<Tab>', lambda e: 'break')
+                    widget.bind('<Down>', lambda e: 'break')
+                    widget.bind('<Up>', lambda e: 'break')
+                    widget.bind('<Button-3>', lambda e: 'break')
+                    widget.bind('<B1-Motion>', lambda e: 'break')
+                    widget.bind('<FocusIn>', lambda e: 'break')
+                    widget.bind('<FocusOut>', lambda e: 'break')
+                    # Bloquear evento de seleção
+                    widget.bind('<<ComboboxSelected>>', lambda e: 'break')
                 except:
                     pass
                     
@@ -244,14 +272,36 @@ class BaseModule:
                 widget.unbind('<Space>')
                 
             elif isinstance(widget, ttk.Combobox):
+                # Bloquear completamente as listas suspensas para usuários com permissão "Consultar"
                 widget.config(state='disabled')
+                # Bloquear todos os eventos de interação
                 widget.unbind('<Key>')
                 widget.unbind('<Button-1>')
+                widget.unbind('<ButtonRelease-1>')
+                widget.unbind('<Double-Button-1>')
                 widget.unbind('<Return>')
                 widget.unbind('<Tab>')
                 widget.unbind('<Down>')
                 widget.unbind('<Up>')
                 widget.unbind('<Button-3>')
+                widget.unbind('<B1-Motion>')
+                widget.unbind('<FocusIn>')
+                widget.unbind('<FocusOut>')
+                # Bloquear eventos de teclado específicos para combobox
+                widget.bind('<Key>', lambda e: 'break')
+                widget.bind('<Button-1>', lambda e: 'break')
+                widget.bind('<ButtonRelease-1>', lambda e: 'break')
+                widget.bind('<Double-Button-1>', lambda e: 'break')
+                widget.bind('<Return>', lambda e: 'break')
+                widget.bind('<Tab>', lambda e: 'break')
+                widget.bind('<Down>', lambda e: 'break')
+                widget.bind('<Up>', lambda e: 'break')
+                widget.bind('<Button-3>', lambda e: 'break')
+                widget.bind('<B1-Motion>', lambda e: 'break')
+                widget.bind('<FocusIn>', lambda e: 'break')
+                widget.bind('<FocusOut>', lambda e: 'break')
+                # Bloquear evento de seleção
+                widget.bind('<<ComboboxSelected>>', lambda e: 'break')
                 
             elif isinstance(widget, tk.Button):
                 # Desabilitar TODOS os botões exceto os de consulta/navegação
@@ -337,8 +387,39 @@ class BaseModule:
             for widget_name in dir(self):
                 widget = getattr(self, widget_name, None)
                 if widget and hasattr(widget, 'config'):
-                    if isinstance(widget, (tk.Entry, tk.Text, tk.Spinbox, ttk.Entry, ttk.Combobox)):
+                    if isinstance(widget, (tk.Entry, tk.Text, tk.Spinbox, ttk.Entry)):
                         widget.config(state='disabled')
+                    elif isinstance(widget, ttk.Combobox):
+                        # Bloquear completamente as listas suspensas
+                        widget.config(state='disabled')
+                        # Bloquear todos os eventos de interação
+                        widget.unbind('<Key>')
+                        widget.unbind('<Button-1>')
+                        widget.unbind('<ButtonRelease-1>')
+                        widget.unbind('<Double-Button-1>')
+                        widget.unbind('<Return>')
+                        widget.unbind('<Tab>')
+                        widget.unbind('<Down>')
+                        widget.unbind('<Up>')
+                        widget.unbind('<Button-3>')
+                        widget.unbind('<B1-Motion>')
+                        widget.unbind('<FocusIn>')
+                        widget.unbind('<FocusOut>')
+                        # Bloquear eventos de teclado específicos para combobox
+                        widget.bind('<Key>', lambda e: 'break')
+                        widget.bind('<Button-1>', lambda e: 'break')
+                        widget.bind('<ButtonRelease-1>', lambda e: 'break')
+                        widget.bind('<Double-Button-1>', lambda e: 'break')
+                        widget.bind('<Return>', lambda e: 'break')
+                        widget.bind('<Tab>', lambda e: 'break')
+                        widget.bind('<Down>', lambda e: 'break')
+                        widget.bind('<Up>', lambda e: 'break')
+                        widget.bind('<Button-3>', lambda e: 'break')
+                        widget.bind('<B1-Motion>', lambda e: 'break')
+                        widget.bind('<FocusIn>', lambda e: 'break')
+                        widget.bind('<FocusOut>', lambda e: 'break')
+                        # Bloquear evento de seleção
+                        widget.bind('<<ComboboxSelected>>', lambda e: 'break')
                     elif isinstance(widget, (tk.Checkbutton, tk.Radiobutton)):
                         widget.config(state='disabled')
                         
