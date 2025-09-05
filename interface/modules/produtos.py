@@ -848,6 +848,12 @@ class ProdutosModule(BaseModule):
                 self.nome_var.set(produto[1] or "")  # nome
                 self.tipo_var.set("Serviços")
                 self.descricao_var.set(produto[5] or "")  # descricao
+                # Garantir que o Valor Unitário também seja carregado para Serviços (Kit)
+                try:
+                    valor_unitario = produto[4] or 0
+                    self.valor_var.set(f"{valor_unitario:.2f}")
+                except Exception:
+                    pass
                 try:
                     if hasattr(self, 'esboco_servico_text'):
                         self.esboco_servico_text.delete("1.0", tk.END)

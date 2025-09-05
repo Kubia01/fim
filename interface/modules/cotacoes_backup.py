@@ -1251,8 +1251,8 @@ class CotacoesModule(BaseModule):
 			return
 		iid = selected[0]
 		vals = list(self.itens_tree.item(iid)['values'])
-		# Esperamos 13 colunas
-		if len(vals) != 13:
+		# Esperamos 14 colunas (inclui ICMS)
+		if len(vals) != 14:
 			return
 		modal = tk.Toplevel(self.frame)
 		modal.title("Editar Item da Proposta")
@@ -1271,6 +1271,7 @@ class CotacoesModule(BaseModule):
 			("Valor Total", 10),
 			("Descrição", 11),
 			("Operação", 12),
+			("ICMS", 13),
 		]
 		entries = {}
 		row = 0
@@ -1290,6 +1291,7 @@ class CotacoesModule(BaseModule):
 				desloc = clean_number(entries[5].get() or '0')
 				estadia = clean_number(entries[6].get() or '0')
 				meses = int(entries[7].get() or 0) if str(entries[7].get() or '').strip().isdigit() else 0
+				icms_val = clean_number(entries[13].get() or '0')
 				# Recalcular total (para locação usa meses; para compra soma custos)
 				if (entries[12].get() or '').lower().startswith('loca'):
 					total = (valor_unit or 0) * (meses or 0) * (qtd or 0)
@@ -1309,6 +1311,7 @@ class CotacoesModule(BaseModule):
 				vals[10] = format_currency(total)
 				vals[11] = entries[11].get().strip()
 				vals[12] = entries[12].get().strip() or 'Compra'
+				vals[13] = format_currency(icms_val)
 				self.itens_tree.item(iid, values=tuple(vals))
 				self.atualizar_total()
 				modal.destroy()

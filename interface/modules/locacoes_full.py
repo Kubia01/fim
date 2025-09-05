@@ -917,7 +917,8 @@ class LocacoesModule(BaseModule):
 			return
 		iid = selected[0]
 		vals = list(self.itens_tree.item(iid)['values'])
-		if len(vals) != 9:
+		# Esperamos 10 colunas (inclui ICMS na última coluna)
+		if len(vals) != 10:
 			return
 		# Criar diálogo simples de edição
 		dialog = tk.Toplevel(self.frame)
@@ -932,6 +933,7 @@ class LocacoesModule(BaseModule):
 			("Fim (DD/MM/AAAA)", 5),
 			("Descrição", 7),
 			("Imagem", 8),
+			("ICMS", 9),
 		]
 		entries = {}
 		row = 0
@@ -966,6 +968,12 @@ class LocacoesModule(BaseModule):
 				vals[6] = format_currency(total)
 				vals[7] = descricao
 				vals[8] = imagem
+				# Preservar ICMS editado
+				try:
+					icms_val = clean_number(entries[9].get().strip() or '0')
+					vals[9] = format_currency(icms_val)
+				except Exception:
+					pass
 				self.itens_tree.item(iid, values=tuple(vals))
 				self._update_total()
 				dialog.destroy()
