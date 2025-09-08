@@ -734,10 +734,17 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
             pdf.set_font("Arial", '', 11)
-            pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Prazo de Entrega: {prazo_entrega if prazo_entrega else 'A combinar'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Moeda: {moeda if moeda else 'BRL (Real Brasileiro)'}"), 0, 1, 'L')
+            if (filial_id or 2) == 1:
+                pdf.cell(0, 5, clean_text("Tipo de Frete: FOB"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Moeda: BRL"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("ICMS: Imposto Incluso"), 0, 1, 'L')
+            else:
+                pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Prazo de Entrega: {prazo_entrega if prazo_entrega else 'A combinar'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Moeda: {moeda if moeda else 'BRL (Real Brasileiro)'}"), 0, 1, 'L')
 
             # =====================================================
             # PÁGINA 6: CONDIÇÕES DE PAGAMENTO e CONDIÇÕES COMERCIAIS
@@ -1297,10 +1304,17 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
             pdf.set_font("Arial", '', 11)
-            pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Prazo de Entrega: {prazo_entrega if prazo_entrega else 'A combinar'}"), 0, 1, 'L')
-            pdf.cell(0, 5, clean_text(f"Moeda: {moeda if moeda else 'BRL (Real Brasileiro)'}"), 0, 1, 'L')
+            if (filial_id or 2) == 1:
+                pdf.cell(0, 5, clean_text("Tipo de Frete: FOB"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("Moeda: BRL"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text("ICMS: Imposto Incluso"), 0, 1, 'L')
+            else:
+                pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Prazo de Entrega: {prazo_entrega if prazo_entrega else 'A combinar'}"), 0, 1, 'L')
+                pdf.cell(0, 5, clean_text(f"Moeda: {moeda if moeda else 'BRL (Real Brasileiro)'}"), 0, 1, 'L')
             pdf.ln(5)
 
             # Observações se houver
