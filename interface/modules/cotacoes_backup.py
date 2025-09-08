@@ -220,17 +220,23 @@ class CotacoesModule(BaseModule):
 								  "2 - WORLD COMP DO BRASIL COMPRESSORES LTDA"], 
 							   width=45, state="readonly")
 		filial_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
-		# Mostrar/ocultar ICMS conforme filial
+		# Mostrar/ocultar ICMS conforme filial (sempre visível para Filial 2)
 		def on_filial_changed(_e=None):
 			try:
 				filial_str = self.filial_var.get()
 				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
 				if filial_id == 2:
-					self.icms_label.grid(row=1, column=0, padx=5, sticky="w")
-					self.icms_entry.grid(row=1, column=1, padx=5, sticky="w")
+					try:
+						self.icms_label.grid(row=4, column=6, padx=5, sticky="w")
+						self.icms_entry.grid(row=0, column=6, padx=5, sticky="w")
+					except Exception:
+						pass
 				else:
-					self.icms_label.grid_remove()
-					self.icms_entry.grid_remove()
+					try:
+						self.icms_label.grid_remove()
+						self.icms_entry.grid_remove()
+					except Exception:
+						pass
 			except Exception:
 				pass
 		filial_combo.bind('<<ComboboxSelected>>', on_filial_changed)
@@ -453,7 +459,7 @@ class CotacoesModule(BaseModule):
 		self.tipo_label.grid(row=0, column=0, padx=5, sticky="w")
 		
 		self.tipo_combo = ttk.Combobox(compra_grid, textvariable=self.item_tipo_var, 
-								  values=["Produto", "Serviços"], 
+								  values=["Produto", "Serviços", "Compressores"], 
 								  width=20, state="readonly")
 		self.tipo_combo.grid(row=0, column=1, padx=(2, 5), sticky="w")
 		self.tipo_combo.bind("<<ComboboxSelected>>", self.on_tipo_changed)
@@ -492,11 +498,10 @@ class CotacoesModule(BaseModule):
 		tk.Label(self.servico_frame, text="Estadia:", font=("Arial", 10, "bold"), bg="white").grid(row=0, column=4, padx=5, sticky="w")
 		tk.Entry(self.servico_frame, textvariable=self.item_estadia_var, width=10).grid(row=0, column=5, padx=5)
 		
-		# ICMS (apenas quando filial = 2)
+		# ICMS (apenas quando filial = 2) - sempre visível para qualquer tipo de item
 		self.item_icms_var = tk.StringVar(value="0.00")
-		self.icms_label = tk.Label(self.servico_frame, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
-		self.icms_entry = tk.Entry(self.servico_frame, textvariable=self.item_icms_var, width=10)
-		# A visibilidade será controlada por on_filial_changed semelhante ao on_tipo_changed
+		self.icms_label = tk.Label(compra_grid, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
+		self.icms_entry = tk.Entry(compra_grid, textvariable=self.item_icms_var, width=12)
 		
 		# Botão adicionar para compra
 		adicionar_button_compra = self.create_button(compra_grid, "Adicionar Item", self.adicionar_item)
@@ -514,14 +519,14 @@ class CotacoesModule(BaseModule):
 		locacao_grid = tk.Frame(self.locacao_fields_frame, bg="white")
 		locacao_grid.pack(fill="x")
 		
-		# Primeira linha - Nome do Equipamento para locação
+		# Primeira linha - Nome do Equipamento para locação (combobox de Compressores)
 		self.nome_label_locacao = tk.Label(locacao_grid, text="Nome do Equipamento:", font=("Arial", 10, "bold"), bg="white")
 		self.nome_label_locacao.grid(row=0, column=0, padx=5, sticky="w")
 		
 		nome_frame_locacao = tk.Frame(locacao_grid, bg='white')
 		nome_frame_locacao.grid(row=0, column=1, columnspan=3, padx=5, sticky="ew")
 		
-		self.item_nome_combo_locacao = ttk.Combobox(nome_frame_locacao, textvariable=self.item_nome_var, width=40)
+		self.item_nome_combo_locacao = ttk.Combobox(nome_frame_locacao, textvariable=self.item_nome_var, width=40, state="readonly")
 		self.item_nome_combo_locacao.pack(side="left", fill="x", expand=True)
 		self.item_nome_combo_locacao.bind("<<ComboboxSelected>>", self.on_item_selected)
 		
@@ -593,6 +598,18 @@ class CotacoesModule(BaseModule):
 		# Inicialmente mostrar layout de compra
 		self.compra_fields_frame.pack(fill="x")
 		self.locacao_fields_frame.pack_forget()
+		# Carregar lista de compressores para locação
+		try:
+			conn = sqlite3.connect(DB_NAME)
+			c = conn.cursor()
+			c.execute("SELECT nome FROM produtos WHERE tipo = 'Produto' AND COALESCE(categoria,'Geral')='Compressores' AND ativo = 1 ORDER BY nome")
+			comp_list = [row[0] for row in c.fetchall()]
+			self.item_nome_combo_locacao['values'] = comp_list
+		finally:
+			try:
+				conn.close()
+			except Exception:
+				pass
 		
 	def on_tipo_changed(self, event=None):
 		"""Callback quando o tipo do item muda"""
@@ -801,7 +818,14 @@ class CotacoesModule(BaseModule):
 		
 		# Para compra, atualizar combo de produtos
 		tipo = self.item_tipo_var.get()
-		tipo_db = 'Kit' if tipo == 'Serviços' else tipo
+		# Mapear para DB
+		if tipo == 'Serviços':
+			tipo_db = 'Kit'
+		elif tipo == 'Compressores':
+			# Compressores são produtos com categoria 'Compressores'
+			tipo_db = 'Produto'
+		else:
+			tipo_db = tipo
 		if not tipo:
 			if hasattr(self, 'item_nome_combo_compra'):
 				self.item_nome_combo_compra['values'] = []
@@ -810,7 +834,10 @@ class CotacoesModule(BaseModule):
 		conn = sqlite3.connect(DB_NAME)
 		c = conn.cursor()
 		try:
-			c.execute("SELECT nome FROM produtos WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo_db,))
+			if tipo == 'Compressores':
+				c.execute("SELECT nome FROM produtos WHERE tipo = 'Produto' AND COALESCE(categoria,'Geral') = 'Compressores' AND ativo = 1 ORDER BY nome")
+			else:
+				c.execute("SELECT nome FROM produtos WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo_db,))
 			produtos = [row[0] for row in c.fetchall()]
 			
 			# Atualizar combo de compra
