@@ -667,10 +667,10 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.cell(0, 10, clean_text("EQUIPAMENTOS"), 0, 1, 'L')
             pdf.ln(2)
 
-            # Buscar itens de locação com meses e ICMS
+            # Buscar itens de locação com meses (sem ICMS)
             c.execute(
                 """
-                SELECT item_nome, quantidade, valor_unitario, COALESCE(locacao_qtd_meses, 0) AS meses, COALESCE(icms, 0) AS icms
+                SELECT item_nome, quantidade, valor_unitario, COALESCE(locacao_qtd_meses, 0) AS meses, 0 AS icms
                 FROM itens_cotacao
                 WHERE cotacao_id = ? AND (tipo_operacao = 'Locação' OR (tipo_operacao IS NULL AND ? IN ('locação','locacao')))
                 ORDER BY id
@@ -684,14 +684,13 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_fill_color(50, 100, 150)
             pdf.set_text_color(255, 255, 255)
             pdf.set_font("Arial", 'B', 11)
-            # Larguras finais para leitura clara (total = 190mm)
-            # Nome 78, Qtd 12, Valor Mensal 30, Período (meses) 35, ICMS 35
-            col_w = [78, 12, 30, 35, 35]
+            # Larguras finais para leitura clara (total = 190mm) - remover coluna ICMS
+            # Nome 100, Qtd 15, Valor Mensal 35, Período (meses) 40
+            col_w = [100, 15, 35, 40]
             pdf.cell(col_w[0], 8, clean_text("Nome do Equipamento"), 1, 0, 'C', 1)
             pdf.cell(col_w[1], 8, clean_text("Qtd"), 1, 0, 'C', 1)
             pdf.cell(col_w[2], 8, clean_text("Valor Mensal"), 1, 0, 'C', 1)
-            pdf.cell(col_w[3], 8, clean_text("Período (meses)"), 1, 0, 'C', 1)
-            pdf.cell(col_w[4], 8, clean_text("ICMS"), 1, 1, 'C', 1)
+            pdf.cell(col_w[3], 8, clean_text("Período (meses)"), 1, 1, 'C', 1)
 
             pdf.set_text_color(0, 0, 0)
             pdf.set_font("Arial", '', 11)
@@ -700,8 +699,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 qtd_num = float(qtd or 0)
                 vm_num = float(valor_mensal or 0)
                 meses_num = int(meses or 0)
-                icms_num = float(icms_val or 0)
-                total_geral += (vm_num * meses_num * qtd_num) + icms_num
+                total_geral += (vm_num * meses_num * qtd_num)
 
                 # Nome com quebra automática
                 x0 = pdf.get_x()
@@ -712,8 +710,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.set_xy(x0 + col_w[0], y0)
                 pdf.cell(col_w[1], h, clean_text(f"{int(qtd_num)}"), 1, 0, 'C')
                 pdf.cell(col_w[2], h, clean_text(f"R$ {vm_num:.2f}"), 1, 0, 'C')
-                pdf.cell(col_w[3], h, clean_text(str(meses_num)), 1, 0, 'C')
-                pdf.cell(col_w[4], h, clean_text(f"R$ {icms_num:.2f}"), 1, 1, 'C')
+                pdf.cell(col_w[3], h, clean_text(str(meses_num)), 1, 1, 'C')
 
             pdf.ln(6)
             pdf.set_x(10)
