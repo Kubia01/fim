@@ -51,7 +51,6 @@ class ProdutosModule(BaseModule):
         # Variáveis
         self.nome_var = tk.StringVar()
         self.tipo_var = tk.StringVar(value="Produto")
-        self.categoria_var = tk.StringVar(value="Geral")
         self.ncm_var = tk.StringVar()
         self.valor_var = tk.StringVar(value="0.00")
         self.descricao_var = tk.StringVar()
@@ -67,17 +66,9 @@ class ProdutosModule(BaseModule):
         # Tipo
         tk.Label(fields_frame, text="Tipo *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
         tipo_combo = ttk.Combobox(fields_frame, textvariable=self.tipo_var, 
-                                 values=["Produto", "Serviços"], width=37, state="readonly")
+                                 values=["Produto", "Serviços", "Compressores"], width=37, state="readonly")
         tipo_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         tipo_combo.bind('<<ComboboxSelected>>', self.on_tipo_changed)
-        row += 1
-        
-        # Categoria (somente para Produto)
-        self.categoria_label = tk.Label(fields_frame, text="Categoria:", font=('Arial', 10, 'bold'), bg='white')
-        self.categoria_label.grid(row=row, column=0, sticky="w", pady=5)
-        self.categoria_combo = ttk.Combobox(fields_frame, textvariable=self.categoria_var, 
-                                            values=["Geral", "Compressores"], width=37, state="readonly")
-        self.categoria_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         row += 1
         
         # NCM (só para produtos)
@@ -403,21 +394,6 @@ class ProdutosModule(BaseModule):
         if True:
             self.ncm_entry.config(state='normal')
         
-        # Controlar campo Categoria
-        try:
-            if hasattr(self, 'categoria_combo') and hasattr(self, 'categoria_label'):
-                if current_tipo == "Produto":
-                    self.categoria_combo.config(state='readonly')
-                    self.categoria_label.grid()
-                    self.categoria_combo.grid()
-                else:
-                    self.categoria_var.set("Geral")
-                    self.categoria_combo.config(state='disabled')
-                    self.categoria_label.grid_remove()
-                    self.categoria_combo.grid_remove()
-        except Exception:
-            pass
-        
         # Controlar campo Esboço do Serviço
         if current_tipo == "Serviços":
             self.esboco_servico_text.config(state='normal')
@@ -599,7 +575,6 @@ class ProdutosModule(BaseModule):
         self.loaded_tipo_atual = None
         self.nome_var.set("")
         self.tipo_var.set("Produto")
-        self.categoria_var.set("Geral")
         self.ncm_var.set("")
         self.valor_var.set("0.00")
         self.descricao_var.set("")
@@ -619,7 +594,14 @@ class ProdutosModule(BaseModule):
             
         nome = self.nome_var.get().strip()
         tipo = self.tipo_var.get()
-        tipo_db = "Kit" if tipo == "Serviços" else tipo
+        # Mapear UI para DB: Serviços -> Kit; Compressores -> Produto + categoria
+        if tipo == "Serviços":
+            tipo_db = "Kit"
+        elif tipo == "Compressores":
+            tipo_db = "Produto"
+        else:
+            tipo_db = tipo
+        categoria_db = "Compressores" if tipo == "Compressores" else "Geral"
         
         if not nome:
             self.show_warning("O nome é obrigatório.")
@@ -670,7 +652,7 @@ class ProdutosModule(BaseModule):
                 """, (
                     nome, tipo_db, self.ncm_var.get().strip(),
                     valor, self.descricao_var.get().strip(),
-                    esboco_texto, self.categoria_var.get().strip(),
+                    esboco_texto, categoria_db,
                     1 if self.ativo_var.get() else 0,
                     self.current_produto_id
                 ))
@@ -686,7 +668,7 @@ class ProdutosModule(BaseModule):
                 """, (
                     nome, tipo_db, self.ncm_var.get().strip(),
                     valor, self.descricao_var.get().strip(),
-                    esboco_texto, self.categoria_var.get().strip(),
+                    esboco_texto, categoria_db,
                     1 if self.ativo_var.get() else 0
                 ))
                 self.current_produto_id = c.lastrowid
@@ -701,7 +683,7 @@ class ProdutosModule(BaseModule):
             
             conn.commit()
             
-            tipo_nome = "Serviços" if tipo == "Serviços" else "Produto"
+            tipo_nome = "Serviços" if tipo == "Serviços" else ("Compressores" if tipo == "Compressores" else "Produto")
             self.show_success(f"{tipo_nome} salvo com sucesso!")
             
             # Emitir evento
@@ -710,7 +692,7 @@ class ProdutosModule(BaseModule):
             self.carregar_produtos()
             self.carregar_produtos_para_kit()  # Atualizar lista para kits
             # Atualizar tipo carregado atual para refletir o registro em edição
-            self.loaded_tipo_atual = ("Kit" if tipo == "Serviços" else tipo)
+            self.loaded_tipo_atual = ("Kit" if tipo == "Serviços" else tipo_db)
             # Evitar reaproveitar composição anterior em um novo kit
             if tipo == "Serviços":
                 self.kit_items = []
@@ -956,9 +938,14 @@ class ProdutosModule(BaseModule):
                 self.carregar_produtos_para_kit()
                 
             else:
-                # Carregar produto/serviço
+                # Carregar produto/serviço/compressores
                 self.nome_var.set(produto[1] or "")  # nome
-                self.tipo_var.set(("Serviços" if (produto[2] or "") == "Kit" else (produto[2] or "Produto")))  # tipo
+                tipo_db = produto[2] or "Produto"
+                categoria_db = produto[7] or "Geral"
+                if tipo_db == "Produto" and categoria_db == "Compressores":
+                    self.tipo_var.set("Compressores")
+                else:
+                    self.tipo_var.set(("Serviços" if tipo_db == "Kit" else tipo_db))
                 self.ncm_var.set(produto[3] or "")  # ncm
                 valor_unitario = produto[4] or 0
                 self.valor_var.set(f"{valor_unitario:.2f}")  # valor_unitario
@@ -975,13 +962,8 @@ class ProdutosModule(BaseModule):
                             self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                # categoria
-                try:
-                    self.categoria_var.set(produto[7] or "Geral")
-                except Exception:
-                    self.categoria_var.set("Geral")
                 self.ativo_var.set(bool(produto[8]))  # ativo
-                self.loaded_tipo_atual = (produto[2] or "Produto")
+                self.loaded_tipo_atual = (tipo_db)
                 
                 # Garantir estado da UI (NCM/Kit)
                 self.on_tipo_changed(None)
