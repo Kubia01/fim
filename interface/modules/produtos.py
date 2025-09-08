@@ -882,7 +882,7 @@ class ProdutosModule(BaseModule):
         
         try:
             c.execute("""
-                SELECT id, nome, tipo, ncm, valor_unitario, descricao, esboco_servico, ativo
+                SELECT id, nome, tipo, ncm, valor_unitario, descricao, esboco_servico, COALESCE(categoria,'Geral'), ativo
                 FROM produtos WHERE id = ?
             """, (produto_id,))
             produto = c.fetchone()
@@ -918,7 +918,7 @@ class ProdutosModule(BaseModule):
                             self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[7]))  # ativo
+                self.ativo_var.set(bool(produto[8]))  # ativo
                 self.loaded_tipo_atual = "Kit"
                 
                 # Garantir estado da UI
@@ -975,7 +975,12 @@ class ProdutosModule(BaseModule):
                             self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[7]))  # ativo
+                # categoria
+                try:
+                    self.categoria_var.set(produto[7] or "Geral")
+                except Exception:
+                    self.categoria_var.set("Geral")
+                self.ativo_var.set(bool(produto[8]))  # ativo
                 self.loaded_tipo_atual = (produto[2] or "Produto")
                 
                 # Garantir estado da UI (NCM/Kit)
