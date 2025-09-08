@@ -164,6 +164,7 @@ def criar_banco():
 		valor_unitario REAL DEFAULT 0,
 		descricao TEXT,
 		esboco_servico TEXT,
+		categoria TEXT DEFAULT 'Geral',
 		ativo BOOLEAN DEFAULT 1,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -172,6 +173,12 @@ def criar_banco():
 	# Migração: Adicionar coluna esboco_servico em produtos
 	try:
 		c.execute("ALTER TABLE produtos ADD COLUMN esboco_servico TEXT")
+	except sqlite3.OperationalError:
+		pass
+
+	# Migração: Adicionar coluna categoria em produtos
+	try:
+		c.execute("ALTER TABLE produtos ADD COLUMN categoria TEXT DEFAULT 'Geral'")
 	except sqlite3.OperationalError:
 		pass
 

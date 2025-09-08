@@ -51,6 +51,7 @@ class ProdutosModule(BaseModule):
         # Variáveis
         self.nome_var = tk.StringVar()
         self.tipo_var = tk.StringVar(value="Produto")
+        self.categoria_var = tk.StringVar(value="Geral")
         self.ncm_var = tk.StringVar()
         self.valor_var = tk.StringVar(value="0.00")
         self.descricao_var = tk.StringVar()
@@ -69,6 +70,14 @@ class ProdutosModule(BaseModule):
                                  values=["Produto", "Serviços"], width=37, state="readonly")
         tipo_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         tipo_combo.bind('<<ComboboxSelected>>', self.on_tipo_changed)
+        row += 1
+        
+        # Categoria (somente para Produto)
+        self.categoria_label = tk.Label(fields_frame, text="Categoria:", font=('Arial', 10, 'bold'), bg='white')
+        self.categoria_label.grid(row=row, column=0, sticky="w", pady=5)
+        self.categoria_combo = ttk.Combobox(fields_frame, textvariable=self.categoria_var, 
+                                            values=["Geral", "Compressores"], width=37, state="readonly")
+        self.categoria_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
         row += 1
         
         # NCM (só para produtos)
@@ -344,7 +353,7 @@ class ProdutosModule(BaseModule):
         tipos_notebook.pack(fill="both", expand=True)
         
         self.trees_por_tipo = {}
-        for tipo in ["Produto", "Kit"]:
+        for tipo in ["Produto", "Kit", "Compressores"]:
             tab = tk.Frame(tipos_notebook, bg='white')
             tipos_notebook.add(tab, text=("Serviços" if tipo=="Kit" else tipo))
             
@@ -393,6 +402,21 @@ class ProdutosModule(BaseModule):
         # Controlar campo NCM
         if True:
             self.ncm_entry.config(state='normal')
+        
+        # Controlar campo Categoria
+        try:
+            if hasattr(self, 'categoria_combo') and hasattr(self, 'categoria_label'):
+                if current_tipo == "Produto":
+                    self.categoria_combo.config(state='readonly')
+                    self.categoria_label.grid()
+                    self.categoria_combo.grid()
+                else:
+                    self.categoria_var.set("Geral")
+                    self.categoria_combo.config(state='disabled')
+                    self.categoria_label.grid_remove()
+                    self.categoria_combo.grid_remove()
+        except Exception:
+            pass
         
         # Controlar campo Esboço do Serviço
         if current_tipo == "Serviços":
@@ -575,6 +599,7 @@ class ProdutosModule(BaseModule):
         self.loaded_tipo_atual = None
         self.nome_var.set("")
         self.tipo_var.set("Produto")
+        self.categoria_var.set("Geral")
         self.ncm_var.set("")
         self.valor_var.set("0.00")
         self.descricao_var.set("")
@@ -636,20 +661,19 @@ class ProdutosModule(BaseModule):
         c = conn.cursor()
         
         try:
-            dados = (
-                nome, tipo_db, self.ncm_var.get().strip(),
-                valor, self.descricao_var.get().strip(),
-                esboco_texto,
-                1 if self.ativo_var.get() else 0
-            )
-            
             if self.current_produto_id:
                 # Atualizar produto
                 c.execute("""
                     UPDATE produtos SET nome = ?, tipo = ?, ncm = ?, valor_unitario = ?,
-                                      descricao = ?, esboco_servico = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP
+                                      descricao = ?, esboco_servico = ?, categoria = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
-                """, dados + (self.current_produto_id,))
+                """, (
+                    nome, tipo_db, self.ncm_var.get().strip(),
+                    valor, self.descricao_var.get().strip(),
+                    esboco_texto, self.categoria_var.get().strip(),
+                    1 if self.ativo_var.get() else 0,
+                    self.current_produto_id
+                ))
                 
                 # Se for kit, limpar itens existentes
                 if tipo == "Serviços":
@@ -657,9 +681,14 @@ class ProdutosModule(BaseModule):
             else:
                 # Inserir novo produto
                 c.execute("""
-                    INSERT INTO produtos (nome, tipo, ncm, valor_unitario, descricao, esboco_servico, ativo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, dados)
+                    INSERT INTO produtos (nome, tipo, ncm, valor_unitario, descricao, esboco_servico, categoria, ativo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    nome, tipo_db, self.ncm_var.get().strip(),
+                    valor, self.descricao_var.get().strip(),
+                    esboco_texto, self.categoria_var.get().strip(),
+                    1 if self.ativo_var.get() else 0
+                ))
                 self.current_produto_id = c.lastrowid
             
             # Se for kit, salvar itens
@@ -712,13 +741,13 @@ class ProdutosModule(BaseModule):
         try:
             # Buscar produtos
             c.execute("""
-                SELECT id, nome, tipo, valor_unitario, ativo
+                SELECT id, nome, tipo, valor_unitario, ativo, COALESCE(categoria,'Geral')
                 FROM produtos
                 ORDER BY nome
             """)
             for row in c.fetchall():
-                produto_id, nome, tipo, valor, ativo = row
-                display_tipo = ("Serviços" if tipo == "Kit" else tipo)
+                produto_id, nome, tipo, valor, ativo, categoria = row
+                display_tipo = ("Serviços" if tipo == "Kit" else ("Compressores" if (tipo == "Produto" and (categoria or "") == "Compressores") else "Produto"))
                 tree = self.trees_por_tipo.get(display_tipo)
                 if tree is None:
                     continue
@@ -749,21 +778,21 @@ class ProdutosModule(BaseModule):
         try:
             if termo:
                 c.execute("""
-                    SELECT id, nome, tipo, valor_unitario, ativo
+                    SELECT id, nome, tipo, valor_unitario, ativo, COALESCE(categoria,'Geral')
                     FROM produtos
-                    WHERE nome LIKE ? OR tipo LIKE ? OR descricao LIKE ?
+                    WHERE nome LIKE ? OR tipo LIKE ? OR descricao LIKE ? OR COALESCE(categoria,'Geral') LIKE ?
                     ORDER BY nome
-                """, (f"%{termo}%", f"%{termo}%", f"%{termo}%"))
+                """, (f"%{termo}%", f"%{termo}%", f"%{termo}%", f"%{termo}%"))
             else:
                 c.execute("""
-                    SELECT id, nome, tipo, valor_unitario, ativo
+                    SELECT id, nome, tipo, valor_unitario, ativo, COALESCE(categoria,'Geral')
                     FROM produtos
                     ORDER BY nome
                 """)
              
             for row in c.fetchall():
-                produto_id, nome, tipo, valor, ativo = row
-                display_tipo = ("Serviços" if tipo == "Kit" else tipo)
+                produto_id, nome, tipo, valor, ativo, categoria = row
+                display_tipo = ("Serviços" if tipo == "Kit" else ("Compressores" if (tipo == "Produto" and (categoria or "") == "Compressores") else "Produto"))
                 tree = self.trees_por_tipo.get(display_tipo)
                 if tree is None:
                     continue
@@ -853,7 +882,7 @@ class ProdutosModule(BaseModule):
         
         try:
             c.execute("""
-                SELECT id, nome, tipo, ncm, valor_unitario, descricao, esboco_servico, ativo
+                SELECT id, nome, tipo, ncm, valor_unitario, descricao, esboco_servico, COALESCE(categoria,'Geral'), ativo
                 FROM produtos WHERE id = ?
             """, (produto_id,))
             produto = c.fetchone()
@@ -889,7 +918,7 @@ class ProdutosModule(BaseModule):
                             self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[7]))  # ativo
+                self.ativo_var.set(bool(produto[8]))  # ativo
                 self.loaded_tipo_atual = "Kit"
                 
                 # Garantir estado da UI
@@ -946,7 +975,12 @@ class ProdutosModule(BaseModule):
                             self.esboco_servico_text.insert("1.0", produto[6])
                 except Exception:
                     pass
-                self.ativo_var.set(bool(produto[7]))  # ativo
+                # categoria
+                try:
+                    self.categoria_var.set(produto[7] or "Geral")
+                except Exception:
+                    self.categoria_var.set("Geral")
+                self.ativo_var.set(bool(produto[8]))  # ativo
                 self.loaded_tipo_atual = (produto[2] or "Produto")
                 
                 # Garantir estado da UI (NCM/Kit)
