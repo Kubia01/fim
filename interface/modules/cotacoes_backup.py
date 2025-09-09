@@ -648,6 +648,14 @@ class CotacoesModule(BaseModule):
 			# Mostrar layout de locação, ocultar layout de compra
 			self.compra_fields_frame.pack_forget()
 			self.locacao_fields_frame.pack(fill="x")
+			# Popular combobox de equipamentos (Compressores)
+			self.update_produtos_combo()
+			# Ocultar coluna de ICMS na lista (largura 0)
+			try:
+				self.itens_tree.heading("icms", text="")
+				self.itens_tree.column("icms", width=0, minwidth=0, stretch=False)
+			except Exception:
+				pass
 			
 		else:
 			# Mostrar seções para compra
@@ -659,6 +667,12 @@ class CotacoesModule(BaseModule):
 			# Mostrar layout de compra, ocultar layout de locação
 			self.locacao_fields_frame.pack_forget()
 			self.compra_fields_frame.pack(fill="x")
+			# Restaurar coluna de ICMS na lista
+			try:
+				self.itens_tree.heading("icms", text="ICMS")
+				self.itens_tree.column("icms", width=80, minwidth=70, stretch=False)
+			except Exception:
+				pass
 		
 		# Ajustar campo nome baseado no tipo de cotação (garantia extra)
 		if modo == "Locação":
@@ -818,6 +832,7 @@ class CotacoesModule(BaseModule):
 					self.item_nome_combo_locacao['values'] = compressores
 					# garantir que seja combobox (não Entry)
 					try:
+						self.item_nome_combo_locacao.configure(state='readonly')
 						self.item_nome_combo_locacao.pack(side="left", fill="x", expand=True)
 					except Exception:
 						pass
