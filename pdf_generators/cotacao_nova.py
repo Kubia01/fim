@@ -755,7 +755,11 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
             pdf.set_font("Arial", '', 11)
-            if (filial_id or 2) == 1:
+            try:
+                filial_is_1 = str(filial_id).strip() == '1'
+            except Exception:
+                filial_is_1 = False
+            if filial_is_1:
                 pdf.cell(0, 5, clean_text("Tipo de Frete: FOB"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
@@ -1335,7 +1339,11 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text("CONDIÇÕES COMERCIAIS:"), 0, 1, 'L')
             pdf.set_font("Arial", '', 11)
-            if (filial_id or 2) == 1:
+            try:
+                filial_is_1 = str(filial_id).strip() == '1'
+            except Exception:
+                filial_is_1 = False
+            if filial_is_1:
                 pdf.cell(0, 5, clean_text("Tipo de Frete: FOB"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
