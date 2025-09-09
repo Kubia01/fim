@@ -367,7 +367,7 @@ class ClientesModule(BaseModule):
                  font=('Arial', 9, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=3)
         prazo_combo = ttk.Combobox(fields_frame, textvariable=self.prazo_pagamento_var, 
                                   values=["À vista", "15 dias", "30 dias", "45 dias", "60 dias", "90 dias"], 
-                                  width=15, state="readonly")
+                                  width=15)
         prazo_combo.grid(row=row, column=1, sticky="w", padx=(10, 0), pady=3)
         
         fields_frame.grid_columnconfigure(1, weight=1)

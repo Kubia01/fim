@@ -1272,10 +1272,13 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     # Valor Unitário
                     pdf.cell(col_widths[3], altura_real, clean_text(format_currency(valor_unitario)), 1, 0, 'R')
 
-                    # Valor Total (somar ICMS em itens de locação)
+                    # Valor Total (Compra: manter ICMS somado quando Filial 2; Locação: sem ICMS)
                     valor_total_display = float(valor_total_item or 0)
-                    if (tipo_operacao or "").lower().startswith('loca'):
-                        valor_total_display += float(icms_value or 0)
+                    if not (tipo_operacao or "").lower().startswith('loca'):
+                        try:
+                            valor_total_display += float(icms_value or 0)
+                        except Exception:
+                            pass
                     pdf.cell(col_widths[4], altura_real, clean_text(format_currency(valor_total_display)), 1, 1, 'R')
 
                     # Acumular total para o rodapé (incluindo ICMS quando aplicável)
