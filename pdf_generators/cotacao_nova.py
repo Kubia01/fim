@@ -619,6 +619,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
             pdf.ln(2)
 
             # Tentar obter do primeiro item de locação
+            equipamento_nome = None
             try:
                 c.execute("SELECT item_nome, locacao_imagem_path FROM itens_cotacao WHERE cotacao_id = ? AND tipo_operacao = 'Locação' ORDER BY id LIMIT 1", (cot_id,))
                 row_first = c.fetchone()
@@ -626,7 +627,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     equipamento_nome = row_first[0]
                     locacao_imagem_path_db = locacao_imagem_path_db or row_first[1]
             except Exception:
-                pass
+                equipamento_nome = None
             if not equipamento_nome:
                 equipamento_nome = locacao_nome_equipamento_db or modelo_titulo or "COMPRESSOR DE PARAFUSO LUBRIFICADO REFRIGERADO À AR"
             pdf.multi_cell(0, 6, clean_text(equipamento_nome))

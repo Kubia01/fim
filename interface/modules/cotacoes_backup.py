@@ -863,6 +863,9 @@ class CotacoesModule(BaseModule):
 		try:
 			if tipo == 'Compressores':
 				c.execute("SELECT nome FROM produtos WHERE tipo = 'Produto' AND COALESCE(categoria,'Geral') = 'Compressores' AND ativo = 1 ORDER BY nome")
+			elif tipo_db == 'Produto':
+				# Excluir compressores da lista de Produto
+				c.execute("SELECT nome FROM produtos WHERE tipo = 'Produto' AND COALESCE(categoria,'Geral') <> 'Compressores' AND ativo = 1 ORDER BY nome")
 			else:
 				c.execute("SELECT nome FROM produtos WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo_db,))
 			produtos = [row[0] for row in c.fetchall()]
