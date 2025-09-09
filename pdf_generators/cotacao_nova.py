@@ -410,15 +410,29 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         
         pdf.ln(10)  # Espaço antes do conteúdo
         
+        # Preparar nome do equipamento (Locação) para uso dinâmico no texto
+        equipamento_nome_preview = None
+        if (tipo_cotacao or '').lower() in ('locação','locacao'):
+            try:
+                c.execute("SELECT item_nome FROM itens_cotacao WHERE cotacao_id = ? AND (tipo_operacao = 'Locação' OR tipo_operacao IS NULL) ORDER BY id LIMIT 1", (cot_id,))
+                row_nome = c.fetchone()
+                if row_nome and row_nome[0]:
+                    equipamento_nome_preview = row_nome[0]
+                elif locacao_nome_equipamento_db:
+                    equipamento_nome_preview = locacao_nome_equipamento_db
+            except Exception:
+                equipamento_nome_preview = locacao_nome_equipamento_db
+
         # Texto de apresentação
         pdf.set_font("Arial", size=11)
         texto_apresentacao = None
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
             # Texto completo com linha alvo mantendo posição e tamanho originais
+            equip_nome_for_line = (equipamento_nome_preview or "").strip()
             texto_str = (
                 "Prezados Senhores:\n\n"
                 "Agradecemos por nos conceder a oportunidade de apresentarmos nossa proposta para\n"
-                "fornecimento de LOCACAO DE COMPRESSOR DE AR.\n\n"
+                f"fornecimento de Locação de Compressor de Ar {equip_nome_for_line if equip_nome_for_line else ''}.\n\n"
                 "A World Comp Compressores e especializada em manutencao de compressores de parafuso\n"
                 "das principais marcas do mercado, como Atlas Copco, Ingersoll Rand, Chicago. Atuamos tambem com\n"
                 "revisao de equipamentos e unidades compressoras, venda de pecas, bem como venda e locacao de\n"
@@ -679,6 +693,15 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 (cot_id, (tipo_cotacao or '').lower(),)
             )
             itens_loc = c.fetchall() or []
+            # Calcular total mensal (soma de valores mensais * qtd)
+            total_mensal_locacao = 0.0
+            try:
+                for (nome_eq, qtd, valor_mensal, meses, _ic) in itens_loc:
+                    qtd_num = float(qtd or 0)
+                    vm_num = float(valor_mensal or 0)
+                    total_mensal_locacao += (vm_num * qtd_num)
+            except Exception:
+                total_mensal_locacao = 0.0
 
             # Cabeçalho da tabela
             pdf.set_x(10)
@@ -766,12 +789,19 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pass
             ddl_texto = f"{ddl_valor} DDL" if ddl_valor else (condicao_pagamento or "30 DDL")
 
+            # Formatar valor mensal dinâmico (somatório mensal de equipamentos)
+            def brl(v):
+                try:
+                    return ("R$ "  f"{v:,.2f}").replace(",", "@").replace(".", ",").replace("@", ".")
+                except Exception:
+                    return f"R$ {v:.2f}"
+            valor_mensal_texto = brl(total_mensal_locacao)
+
             texto_pagamento = (
                 "O preço inclui: Uso do equipamento listado no Resumo da Proposta Preço, partida técnica, serviços \n"
                 "preventivos e corretivos, peças, deslocamento e acomodação dos técnicos, quando necessário. \n"
                 "Pelos serviços objeto desta proposta, após a entrega do(s) equipamento(s) previsto neste contrato, o \n"
-                "CONTRATANTE deverá iniciar os respectivos pagamentos mensais referentes a locação no valor de \n"
-                "R$ ____ (______reais) taxa fixa mensal, com vencimento à " + ddl_texto + ", Data esta que \n"
+                f"CONTRATANTE deverá iniciar os respectivos pagamentos mensais referentes a locação no valor de {valor_mensal_texto} taxa fixa mensal, com vencimento à " + ddl_texto + ", Data esta que \n"
                 "contará a partir da entrega do equipamento nas dependencias da contratante, ( COM \n"
                 "FATURAMENTO ATRAVÉS DE RECIBO DE LOCAÇÃO)."
             )
