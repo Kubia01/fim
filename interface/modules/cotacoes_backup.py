@@ -226,17 +226,12 @@ class CotacoesModule(BaseModule):
 				filial_str = self.filial_var.get()
 				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
 				if filial_id == 2:
-					try:
-						self.icms_label.grid(row=4, column=6, padx=5, sticky="w")
-						self.icms_entry.grid(row=0, column=6, padx=5, sticky="w")
-					except Exception:
-						pass
+					# posicionar ICMS junto aos campos de serviço
+					self.icms_label.grid(row=0, column=6, padx=5, sticky="w")
+					self.icms_entry.grid(row=0, column=7, padx=5, sticky="w")
 				else:
-					try:
-						self.icms_label.grid_remove()
-						self.icms_entry.grid_remove()
-					except Exception:
-						pass
+					self.icms_label.grid_remove()
+					self.icms_entry.grid_remove()
 			except Exception:
 				pass
 		filial_combo.bind('<<ComboboxSelected>>', on_filial_changed)
@@ -498,10 +493,10 @@ class CotacoesModule(BaseModule):
 		tk.Label(self.servico_frame, text="Estadia:", font=("Arial", 10, "bold"), bg="white").grid(row=0, column=4, padx=5, sticky="w")
 		tk.Entry(self.servico_frame, textvariable=self.item_estadia_var, width=10).grid(row=0, column=5, padx=5)
 		
-		# ICMS (apenas quando filial = 2) - sempre visível para qualquer tipo de item
+		# ICMS (apenas quando filial = 2) - alinhado na linha de campos de serviço
 		self.item_icms_var = tk.StringVar(value="0.00")
-		self.icms_label = tk.Label(compra_grid, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
-		self.icms_entry = tk.Entry(compra_grid, textvariable=self.item_icms_var, width=12)
+		self.icms_label = tk.Label(self.servico_frame, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
+		self.icms_entry = tk.Entry(self.servico_frame, textvariable=self.item_icms_var, width=10)
 		
 		# Botão adicionar para compra
 		adicionar_button_compra = self.create_button(compra_grid, "Adicionar Item", self.adicionar_item)
@@ -664,18 +659,17 @@ class CotacoesModule(BaseModule):
 		
 		# Ajustar campo nome baseado no tipo de cotação (garantia extra)
 		if modo == "Locação":
-			# Para locação, converter combo para Entry (texto livre) com tamanho expandido
-			if hasattr(self, 'item_nome_combo_locacao') and not hasattr(self, 'item_nome_entry'):
-				# Criar Entry para substituir o combo com tamanho grande
-				self.item_nome_entry = tk.Entry(self.item_nome_combo_locacao.master, textvariable=self.item_nome_var, width=70, font=('Arial', 10))
-				self.item_nome_entry.pack(side="left", fill="x", expand=True)
-				self.item_nome_combo_locacao.pack_forget()  # Ocultar combo
-			elif hasattr(self, 'item_nome_entry'):
-				# Se já existe, apenas garantir que está visível com tamanho correto
-				self.item_nome_entry.config(width=70)
-				self.item_nome_entry.pack(side="left", fill="x", expand=True)
-				if hasattr(self, 'item_nome_combo_locacao'):
-					self.item_nome_combo_locacao.pack_forget()
+			# Para locação, usar combobox de compressores; garantir que o entry custom não seja usado
+			if hasattr(self, 'item_nome_entry'):
+				try:
+					self.item_nome_entry.pack_forget()
+				except Exception:
+					pass
+			if hasattr(self, 'item_nome_combo_locacao'):
+				try:
+					self.item_nome_combo_locacao.pack(side="left", fill="x", expand=True)
+				except Exception:
+					pass
 			# Limpar tipo selecionado
 			self.item_tipo_var.set("")
 			
@@ -810,10 +804,20 @@ class CotacoesModule(BaseModule):
 		"""Atualizar combo de produtos baseado no tipo selecionado"""
 		modo = self.tipo_cotacao_var.get()
 		
-		# Se for Locação, não sugerir produtos (nome manual)
+		# Se for Locação, sugerir apenas Compressores
 		if modo == 'Locação':
-			if hasattr(self, 'item_nome_combo_locacao'):
-				self.item_nome_combo_locacao['values'] = []
+			try:
+				if hasattr(self, 'item_nome_combo_locacao'):
+					conn = sqlite3.connect(DB_NAME)
+					c = conn.cursor()
+					c.execute("SELECT nome FROM produtos WHERE tipo='Produto' AND COALESCE(categoria,'Geral')='Compressores' AND ativo=1 ORDER BY nome")
+					compressores = [row[0] for row in c.fetchall()]
+					self.item_nome_combo_locacao['values'] = compressores
+			finally:
+				try:
+					conn.close()
+				except Exception:
+					pass
 			return
 		
 		# Para compra, atualizar combo de produtos
@@ -1185,7 +1189,7 @@ class CotacoesModule(BaseModule):
 				format_currency(valor_total),
 				descricao_completa,
 				"Locação",
-				format_currency(0)  # ICMS para locação
+				"R$ 0,00"  # Sem ICMS para locação
 			))
 		else:
 			# Obter ICMS baseado na filial
