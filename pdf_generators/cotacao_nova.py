@@ -736,7 +736,6 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Moeda: BRL"), 0, 1, 'L')
-                pdf.cell(0, 5, clean_text("ICMS: Imposto Incluso"), 0, 1, 'L')
             else:
                 pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
@@ -1306,7 +1305,6 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 pdf.cell(0, 5, clean_text("Condição de Pagamento: 30 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Prazo de Entrega: 10 dias"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text("Moeda: BRL"), 0, 1, 'L')
-                pdf.cell(0, 5, clean_text("ICMS: Imposto Incluso"), 0, 1, 'L')
             else:
                 pdf.cell(0, 5, clean_text(f"Tipo de Frete: {tipo_frete if tipo_frete else 'FOB'}"), 0, 1, 'L')
                 pdf.cell(0, 5, clean_text(f"Condição de Pagamento: {condicao_pagamento if condicao_pagamento else 'A combinar'}"), 0, 1, 'L')
