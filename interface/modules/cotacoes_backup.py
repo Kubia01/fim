@@ -226,9 +226,12 @@ class CotacoesModule(BaseModule):
 				filial_str = self.filial_var.get()
 				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
 				if filial_id == 2:
-					# posicionar ICMS junto aos campos de serviço
-					self.icms_label.grid(row=0, column=6, padx=5, sticky="w")
-					self.icms_entry.grid(row=0, column=7, padx=5, sticky="w")
+					# posicionar ICMS na linha principal de compra
+					try:
+						self.icms_label.grid(row=0, column=6, padx=5, sticky="w")
+						self.icms_entry.grid(row=0, column=7, padx=5, sticky="w")
+					except Exception:
+						pass
 				else:
 					self.icms_label.grid_remove()
 					self.icms_entry.grid_remove()
@@ -493,10 +496,10 @@ class CotacoesModule(BaseModule):
 		tk.Label(self.servico_frame, text="Estadia:", font=("Arial", 10, "bold"), bg="white").grid(row=0, column=4, padx=5, sticky="w")
 		tk.Entry(self.servico_frame, textvariable=self.item_estadia_var, width=10).grid(row=0, column=5, padx=5)
 		
-		# ICMS (apenas quando filial = 2) - alinhado na linha de campos de serviço
+		# ICMS (apenas quando filial = 2) - alinhado no grid principal de compra
 		self.item_icms_var = tk.StringVar(value="0.00")
-		self.icms_label = tk.Label(self.servico_frame, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
-		self.icms_entry = tk.Entry(self.servico_frame, textvariable=self.item_icms_var, width=10)
+		self.icms_label = tk.Label(compra_grid, text="ICMS:", font=("Arial", 10, "bold"), bg="white")
+		self.icms_entry = tk.Entry(compra_grid, textvariable=self.item_icms_var, width=12)
 		
 		# Botão adicionar para compra
 		adicionar_button_compra = self.create_button(compra_grid, "Adicionar Item", self.adicionar_item)
@@ -813,6 +816,11 @@ class CotacoesModule(BaseModule):
 					c.execute("SELECT nome FROM produtos WHERE tipo='Produto' AND COALESCE(categoria,'Geral')='Compressores' AND ativo=1 ORDER BY nome")
 					compressores = [row[0] for row in c.fetchall()]
 					self.item_nome_combo_locacao['values'] = compressores
+					# garantir que seja combobox (não Entry)
+					try:
+						self.item_nome_combo_locacao.pack(side="left", fill="x", expand=True)
+					except Exception:
+						pass
 			finally:
 				try:
 					conn.close()
