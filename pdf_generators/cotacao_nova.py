@@ -788,7 +788,8 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                     ddl_valor = m.group(1)
             except Exception:
                 pass
-            ddl_texto = f"{ddl_valor} DDL" if ddl_valor else (condicao_pagamento or "30 DDL")
+            raw_cp = (condicao_pagamento or '').strip()
+            ddl_texto = raw_cp if raw_cp else (f"{ddl_valor} DDL" if ddl_valor else "30 dias")
 
             # Formatar valor mensal dinâmico (somatório mensal de equipamentos)
             def brl(v):
@@ -802,7 +803,7 @@ Com uma equipe de técnicos altamente qualificados e constantemente treinados pa
                 "O preço inclui: Uso do equipamento listado no Resumo da Proposta Preço, partida técnica, serviços \n"
                 "preventivos e corretivos, peças, deslocamento e acomodação dos técnicos, quando necessário. \n"
                 "Pelos serviços objeto desta proposta, após a entrega do(s) equipamento(s) previsto neste contrato, o \n"
-                f"CONTRATANTE deverá iniciar os respectivos pagamentos mensais referentes a locação no valor de {valor_mensal_texto} taxa fixa mensal, com vencimento à " + ddl_texto + ", Data esta que \n"
+                f"CONTRATANTE deverá iniciar os respectivos pagamentos mensais referentes a locação no valor de {valor_mensal_texto} taxa fixa mensal, com vencimento à {ddl_texto}, Data esta que \n"
                 "contará a partir da entrega do equipamento nas dependencias da contratante, ( COM \n"
                 "FATURAMENTO ATRAVÉS DE RECIBO DE LOCAÇÃO)."
             )
