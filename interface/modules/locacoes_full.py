@@ -136,19 +136,9 @@ class LocacoesModule(BaseModule):
 		tk.Label(dados, text="Filial *:", font=('Arial', 10, 'bold'), bg='white').grid(row=row, column=0, sticky="w", pady=5)
 		filial_combo = ttk.Combobox(dados, textvariable=self.filial_var, values=["1 - WORLD COMP COMPRESSORES LTDA", "2 - WORLD COMP DO BRASIL COMPRESSORES LTDA"], width=45, state="readonly")
 		filial_combo.grid(row=row, column=1, sticky="ew", padx=(10, 0), pady=5)
-		# Mostrar/ocultar ICMS conforme filial
+		# ICMS não é mais utilizado em Locação
 		def on_filial_changed(_e=None):
-			try:
-				filial_str = self.filial_var.get()
-				filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
-				if filial_id == 2:
-					self.icms_label.grid(row=7, column=0, padx=5, sticky="w")
-					self.icms_entry.grid(row=7, column=1, padx=5, sticky="w")
-				else:
-					self.icms_label.grid_remove()
-					self.icms_entry.grid_remove()
-			except Exception:
-				pass
+			return
 		filial_combo.bind('<<ComboboxSelected>>', on_filial_changed)
 		row += 1
 
@@ -213,11 +203,23 @@ class LocacoesModule(BaseModule):
 		self.item_inicio_var = tk.StringVar()
 		self.item_fim_var = tk.StringVar()
 		self.item_imagem_var = tk.StringVar()
-		self.item_icms_var = tk.StringVar(value="0.00")
+		# ICMS removido do fluxo de Locação
 
 		row = 0
 		tk.Label(add_frame, text="Nome do Equipamento:", font=("Arial", 10, "bold"), background="white").grid(row=row, column=0, padx=5, sticky="w")
-		tk.Entry(add_frame, textvariable=self.item_nome_var, width=40).grid(row=row, column=1, padx=5, sticky="ew")
+		self.item_nome_combo = ttk.Combobox(add_frame, textvariable=self.item_nome_var, width=40, state="readonly")
+		self.item_nome_combo.grid(row=row, column=1, padx=5, sticky="ew")
+		try:
+			conn = sqlite3.connect(DB_NAME)
+			c = conn.cursor()
+			c.execute("SELECT nome FROM produtos WHERE tipo = 'Produto' AND COALESCE(categoria,'Geral')='Compressores' AND ativo = 1 ORDER BY nome")
+			comp_list = [row[0] for row in c.fetchall()]
+			self.item_nome_combo['values'] = comp_list
+		finally:
+			try:
+				conn.close()
+			except Exception:
+				pass
 		row += 1
 
 		tk.Label(add_frame, text="Descrição:", font=("Arial", 10, "bold"), background="white").grid(row=row, column=0, padx=5, sticky="w")
@@ -247,11 +249,7 @@ class LocacoesModule(BaseModule):
 		self.create_button(img_item_frame, "Selecionar...", lambda: self._pick_image_into(self.item_imagem_var), bg='#10b981').pack(side="right", padx=(5, 0))
 		row += 1
 
-		# ICMS (apenas quando filial = 2)
-		self.icms_label = tk.Label(add_frame, text="ICMS:", font=("Arial", 10, "bold"), background="white")
-		self.icms_entry = tk.Entry(add_frame, textvariable=self.item_icms_var, width=15)
-		# A visibilidade será controlada por on_filial_changed
-		row += 1
+		# Campo ICMS removido
 
 		# Ações de imagem do item selecionado
 		actions_frame = tk.Frame(parent, bg='white')
@@ -265,7 +263,7 @@ class LocacoesModule(BaseModule):
 		# Tree
 		list_container = tk.Frame(parent, bg='white')
 		list_container.pack(fill="both", expand=True)
-		columns = ("nome", "qtd", "valor_unit", "meses", "inicio", "fim", "valor_total", "descricao", "imagem", "icms")
+		columns = ("nome", "qtd", "valor_unit", "meses", "inicio", "fim", "valor_total", "descricao", "imagem")
 		self.itens_tree = ttk.Treeview(list_container, columns=columns, show="headings", height=8)
 		for col, text, width in [
 			("nome", "Nome/Equipamento", 250),
@@ -276,8 +274,7 @@ class LocacoesModule(BaseModule):
 			("fim", "Fim", 90),
 			("valor_total", "Total", 100),
 			("descricao", "Descrição", 200),
-			("imagem", "Imagem", 200),
-			("icms", "ICMS", 80)
+			("imagem", "Imagem", 200)
 		]:
 			self.itens_tree.heading(col, text=text)
 			self.itens_tree.column(col, width=width, minwidth=width)
@@ -340,7 +337,7 @@ class LocacoesModule(BaseModule):
 		qtd = self.item_qtd_var.get().strip() or "1"
 		valor = self.item_valor_var.get().strip() or "0.00"
 		desc = self.item_desc_var.get().strip()
-		icms = self.item_icms_var.get().strip() or "0.00"
+		# ICMS removido
 		inicio_iso = self._parse_date(self.item_inicio_var.get())
 		fim_iso = self._parse_date(self.item_fim_var.get())
 		if not nome:
@@ -356,17 +353,8 @@ class LocacoesModule(BaseModule):
 			self.show_error("Valores numéricos inválidos para item.")
 			return
 		meses = self._calculate_months_between(inicio_iso, fim_iso)
-		# Obter ICMS baseado na filial
-		icms_val = 0
-		try:
-			filial_str = self.filial_var.get()
-			filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
-			if filial_id == 2:
-				icms_val = clean_number(icms)
-		except Exception:
-			icms_val = 0
-		# Calcular total incluindo ICMS quando filial = 2
-		total = ((valor_unit or 0) * (meses or 0) * quantidade) + (icms_val or 0)
+		# Calcular total sem ICMS
+		total = ((valor_unit or 0) * (meses or 0) * quantidade)
 			
 		self.itens_tree.insert("", "end", values=(
 			nome,
@@ -377,8 +365,7 @@ class LocacoesModule(BaseModule):
 			format_date(fim_iso),
 			format_currency(total),
 			desc,
-			self.item_imagem_var.get().strip(),
-			format_currency(icms_val)
+			self.item_imagem_var.get().strip()
 		))
 		self._update_total()
 		# clear item inputs
@@ -389,7 +376,7 @@ class LocacoesModule(BaseModule):
 		self.item_inicio_var.set("")
 		self.item_fim_var.set("")
 		self.item_imagem_var.set("")
-		self.item_icms_var.set("0.00")
+		# ICMS removido
 
 	def _remover_item(self):
 		sel = self.itens_tree.selection()
@@ -560,11 +547,11 @@ class LocacoesModule(BaseModule):
 			# Inserir itens com imagem por item
 			for iid in self.itens_tree.get_children():
 				values = self.itens_tree.item(iid)['values']
-				(nome, qtd, valor_unit_fmt, meses, inicio_fmt, fim_fmt, total_fmt, desc, imagem, icms_fmt) = values
+				(nome, qtd, valor_unit_fmt, meses, inicio_fmt, fim_fmt, total_fmt, desc, imagem) = values
 				quantidade = float(qtd)
 				valor_unit = clean_number(valor_unit_fmt)
 				valor_total_item = clean_number(total_fmt)
-				icms_val = clean_number(icms_fmt) if filial_id == 2 else 0
+				icms_val = 0
 				inicio_iso = self._parse_date(inicio_fmt)
 				fim_iso = self._parse_date(fim_fmt)
 				meses_int = int(meses) if str(meses).isdigit() else None
@@ -614,7 +601,6 @@ class LocacoesModule(BaseModule):
 			self.itens_tree.delete(iid)
 		# limpar qualquer imagem temporária
 		self.item_imagem_var.set("")
-		self.item_icms_var.set("0.00")
 		# Limpar campos de item
 		self.item_nome_var.set("")
 		self.item_desc_var.set("")
@@ -868,7 +854,7 @@ class LocacoesModule(BaseModule):
 			c.execute(
 				"""
 				SELECT item_nome, quantidade, valor_unitario, locacao_qtd_meses, locacao_data_inicio,
-				       locacao_data_fim, valor_total_item, descricao, locacao_imagem_path, icms
+				       locacao_data_fim, valor_total_item, descricao, locacao_imagem_path
 				FROM itens_cotacao
 				WHERE cotacao_id = ?
 				ORDER BY id
@@ -876,7 +862,7 @@ class LocacoesModule(BaseModule):
 				(cid,),
 			)
 			first_img = ""
-			for (nome, qtd, valor_unit, meses, inicio, fim, total_item, desc, img, icms) in c.fetchall():
+			for (nome, qtd, valor_unit, meses, inicio, fim, total_item, desc, img) in c.fetchall():
 				self.itens_tree.insert(
 					"", "end",
 					values=(
@@ -889,7 +875,6 @@ class LocacoesModule(BaseModule):
 						format_currency(total_item),
 						desc or "",
 						img or "",
-						format_currency(icms or 0),
 					),
 				)
 				if not first_img and img:
@@ -942,8 +927,8 @@ class LocacoesModule(BaseModule):
 			return
 		iid = selected[0]
 		vals = list(self.itens_tree.item(iid)['values'])
-		# Esperamos 10 colunas (inclui ICMS na última coluna)
-		if len(vals) != 10:
+		# Esperamos 9 colunas (ICMS removido)
+		if len(vals) != 9:
 			return
 		# Criar diálogo simples de edição
 		dialog = tk.Toplevel(self.frame)
@@ -958,7 +943,6 @@ class LocacoesModule(BaseModule):
 			("Fim (DD/MM/AAAA)", 5),
 			("Descrição", 7),
 			("Imagem", 8),
-			("ICMS", 9),
 		]
 		entries = {}
 		row = 0
@@ -981,14 +965,8 @@ class LocacoesModule(BaseModule):
 				fim = entries[5].get().strip()
 				descricao = entries[7].get().strip()
 				imagem = entries[8].get().strip()
-				# recalcular total incluindo ICMS quando filial = 2
-				try:
-					filial_str = self.filial_var.get()
-					filial_id = int(filial_str.split(' - ')[0]) if ' - ' in filial_str else int(filial_str)
-					icms_edit = clean_number(entries.get(9, tk.StringVar(value='0')).get() if entries.get(9) else '0') if filial_id == 2 else 0
-				except Exception:
-					icms_edit = 0
-				total = ((valor_unit or 0) * (meses or 0) * (quantidade or 0)) + (icms_edit or 0)
+				# recalcular total sem ICMS
+				total = ((valor_unit or 0) * (meses or 0) * (quantidade or 0))
 				# formatar
 				vals[0] = nome
 				vals[1] = f"{quantidade:.2f}"
@@ -999,12 +977,7 @@ class LocacoesModule(BaseModule):
 				vals[6] = format_currency(total)
 				vals[7] = descricao
 				vals[8] = imagem
-				# Preservar ICMS editado
-				try:
-					icms_val = clean_number(entries[9].get().strip() or '0')
-					vals[9] = format_currency(icms_val)
-				except Exception:
-					pass
+				# ICMS removido
 				self.itens_tree.item(iid, values=tuple(vals))
 				self._update_total()
 				dialog.destroy()
