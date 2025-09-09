@@ -152,9 +152,17 @@ class PDFCotacao(FPDF):
         self.set_font("Arial", '', 10)  # Fonte menor
         self.set_text_color(*self.baby_blue)  # Cor azul bebê
         
-        # Informações do rodapé centralizadas - 3 linhas com CNPJ
+        # Informações do rodapé centralizadas - 3 linhas com CNPJ (+ I.E. para Filial 1)
         endereco_completo = f"{self.dados_filial.get('endereco', '')} - CEP: {self.dados_filial.get('cep', '')}"
-        cnpj_completo = f"CNPJ: {self.dados_filial.get('cnpj', 'N/A')}"
+        cnpj_val = self.dados_filial.get('cnpj', 'N/A')
+        ie_append = ""
+        try:
+            filial_is_1 = str(self.dados_filial.get('id') or '').strip() == '1'
+        except Exception:
+            filial_is_1 = False
+        if filial_is_1:
+            ie_append = "  |  I.E: 635970206110"
+        cnpj_completo = f"CNPJ: {cnpj_val}{ie_append}"
         contato_completo = f"E-mail: {self.dados_filial.get('email', '')} | Fone: {self.dados_filial.get('telefones', '')}"
         
         self.cell(0, 5, clean_text(endereco_completo), 0, 1, 'C')
@@ -364,7 +372,7 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         nome_filial = dados_filial.get('nome', 'N/A')
         pdf.cell(95, 5, clean_text(nome_filial), 0, 1, 'L')
         
-        # CNPJ
+        # CNPJ (com I.E. quando Filial 1)
         pdf.set_font("Arial", '', 10)
         cliente_cnpj = getattr(pdf, 'cliente_cnpj', '')
         if cliente_cnpj:
@@ -375,7 +383,14 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         
         pdf.set_x(105)
         cnpj_filial = dados_filial.get('cnpj', 'N/A')
-        pdf.cell(95, 5, clean_text(f"CNPJ: {cnpj_filial}"), 0, 1, 'L')
+        try:
+            filial_is_1 = str(filial_id).strip() == '1'
+        except Exception:
+            filial_is_1 = False
+        cnpj_ie_text = f"CNPJ: {cnpj_filial}"
+        if filial_is_1:
+            cnpj_ie_text += "  |  I.E: 635970206110"
+        pdf.cell(95, 5, clean_text(cnpj_ie_text), 0, 1, 'L')
         
         # Telefone
         cliente_telefone = getattr(pdf, 'cliente_telefone', '')
@@ -398,8 +413,8 @@ def gerar_pdf_cotacao_nova(cotacao_id, db_name, current_user=None, contato_nome=
         pdf.cell(95, 5, clean_text(contato_texto), 0, 0, 'L')
         
         pdf.set_x(105)
-        # Buscar e-mail do responsável da cotação
-        email_responsavel = dados_usuario.get('email', dados_filial.get('email', 'N/A'))
+        # Buscar e-mail do responsável da cotação (forçar e-mail do usuário criador)
+        email_responsavel = (responsavel_email or dados_usuario.get('email') or 'N/A')
         pdf.cell(95, 5, clean_text(f"E-mail: {email_responsavel}"), 0, 1, 'L')
         
         # Linha adicional - Responsável
@@ -487,11 +502,13 @@ Atenciosamente,
         # Assinatura na parte inferior da página 2
         pdf.set_y(240)  # Posiciona mais baixo para garantir que fique na página 2
         if (tipo_cotacao or '').lower() == 'locação' or (tipo_cotacao or '').lower() == 'locacao':
-            pdf.set_font("Arial", '', 11)
-            pdf.cell(0, 5, clean_text("Atenciosamente,"), 0, 1, 'L')
+            # Replicar bloco inferior da página 2 de Serviços, mas substituir o nome da filial por "Atenciosamente, WORLD COMP..."
             pdf.set_font("Arial", 'B', 11)
-            filial_nome_ass = dados_filial.get('nome', 'WORLD COMP')
-            pdf.cell(0, 5, clean_text(filial_nome_ass), 0, 1, 'L')
+            pdf.cell(0, 6, clean_text(responsavel_nome.upper()), 0, 1, 'L')
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(0, 5, clean_text("Vendas"), 0, 1, 'L')
+            pdf.cell(0, 5, clean_text(f"Fone: {dados_filial.get('telefones', '')}"), 0, 1, 'L')
+            pdf.cell(0, 5, clean_text("Atenciosamente, WORLD COMP DO BRASIL COMPRESSORES LTDA"), 0, 1, 'L')
         else:
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(0, 6, clean_text(responsavel_nome.upper()), 0, 1, 'L')
